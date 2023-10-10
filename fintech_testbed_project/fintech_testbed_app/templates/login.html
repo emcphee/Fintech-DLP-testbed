@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>Big Bank - Login</title>
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'homestyle.css' %}">
+    <link rel="stylesheet" href="{% static 'loginstyle.css' %}">
+{% endblock %}
+
+{% block header %}
+    Welcome to Big Bank
+{% endblock %}
+
+{% block content %}
+    <div class="login-container">
+        <h2>Login to Your Account</h2>
+        <form class="login-form" action="#" method="post">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button class="login-btn" type="submit">Login</button>
+        </form>
+    </div>
+{% endblock %}

@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 # Rebuild the Dockerfile
 docker build -t "fintechtestbed:Dockerfile" .
 
-# Run the container detached on host port 80
+# Run the container detached on host port 8000
 docker run -d -p 8000:8000 fintechtestbed:Dockerfile > $null
 
 Write-Host "`n`nSuccessfully rebuilt and launched container`n"
