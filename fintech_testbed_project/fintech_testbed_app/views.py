@@ -9,10 +9,9 @@ def login(request):
     return render(request, "login.html")
 
 def services(request):
-     return HttpResponse("Services Page Not Implemented")
+     return render(request, "services.html")
 
 def aboutus(request):
-     return HttpResponse("About Us Page Not Implemented")
-
+     return render(request, "aboutus.html")
 def contactus(request):
-     return HttpResponse("Contact Us Page Not Implemented")
+    return render(request, "contactus.html")

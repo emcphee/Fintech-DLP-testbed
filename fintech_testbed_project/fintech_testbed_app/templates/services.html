@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>Services - Big Bank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'homestyle.css' %}">
+    <!-- You can include additional CSS stylesheets or scripts specific to this page if needed -->
+{% endblock %}
+
+{% block header %}
+    <!-- Customize the header for the services page if needed -->
+    <h1>Our Services</h1>
+{% endblock %}
+
+{% block content %}
+    <!-- Add your "Services" page content here -->
+    <h2>Explore Our Services</h2>
+    <p>At Your Bank, we offer a range of financial services to meet your needs:</p>
+    
+    <ul>
+        <li>Savings Accounts</li>
+        <li>Checking Accounts</li>
+        <li>Loans and Mortgages</li>
+        <li>Credit Cards</li>
+        <li>Investment Services</li>
+    </ul>
+
+    <h2>Why Choose Us</h2>
+    <p>We are committed to providing the best financial solutions with a focus on:</p>
+    
+    <ul>
+        <li>Customer Satisfaction</li>
+        <li>Security and Privacy</li>
+        <li>Financial Expertise</li>
+        <li>Innovation and Technology</li>
+    </ul>
+
+    <!-- You can add more content here, such as images or additional information about your services. -->
+{% endblock %}
