@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>Register - Big Bank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'homestyle.css' %}">
+    <link rel="stylesheet" href="{% static 'loginstyle.css' %}">
+    <!-- You can include additional CSS stylesheets or scripts specific to this page if needed -->
+{% endblock %}
+
+{% block header %}
+    <!-- Customize the header for the registration page if needed -->
+    <h1>Register an Account</h1>
+{% endblock %}
+
+<!-- Add this block to your "register.html" template -->
+{% block content %}
+    <!-- Add your registration page content here -->
+    <div class="register-container">
+        <h2>Create a New Account</h2>
+        
+        {% if error_message %}
+        <p class="error-message">{{ error_message }}</p>
+        {% endif %}
+        
+        <form class="register-form" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="password_confirm">Confirm Password:</label>
+                <input type="password" id="password_confirm" name="password_confirm" required>
+            </div>
+            <button class="register-btn" type="submit">Register</button>
+        </form>
+    </div>
+{% endblock %}
