@@ -29,4 +29,22 @@
 
         <p>Don't have an account? <a href="{% url 'register' %}">Register</a></p> <!-- Link to the registration page -->
     </div>
+
+    <script>
+        // Get the form element with the class "register-form"
+        const registerForm = document.querySelector('.login-form');
+    
+        // Add an event listener to the form's submit action
+        registerForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent the default form submission
+    
+            // Access form input values
+            const username = document.querySelector('#username').value;
+            const password = document.querySelector('#password').value;
+    
+            // You can do something with the values here
+            console.log('Username:', username);
+            console.log('Password:', password);
+        });
+    </script>
 {% endblock %}
