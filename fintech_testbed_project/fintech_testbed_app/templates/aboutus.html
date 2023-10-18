@@ -2,8 +2,13 @@
 
 {% block head %}
     <title>About Us - Big Bank</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'homestyle.css' %}">
+    <style>
+        .block {
+            height: 30%;
+            width: 15%;
+            padding: 30px;
+        }
+    </style>
 {% endblock %}
 
 {% block header %}
@@ -11,13 +16,17 @@
 {% endblock %}
 
 {% block content %}
-    <h2>Our Story</h2>
-    <p>Welcome to Big Bank, where financial excellence meets customer satisfaction.</p>
-
-    <h2>Our Mission</h2>
-    <p>Our mission is to provide top-quality banking services to our customers and build a secure financial future for all.</p>
-
-    <h2>Our Team</h2>
-    <p>We have a dedicated team of professionals who are committed to serving your financial needs.</p>
+    <div class="block">
+        <h2>Our Story</h2>
+        <p>Welcome to Big Bank, where financial excellence meets customer satisfaction.</p>
+    </div>
+    <div class="block">
+        <h2>Our Mission</h2>
+        <p>Our mission is to provide top-quality banking services to our customers and build a secure financial future for all.</p>
+    </div>
+    <div class="block">
+        <h2>Our Team</h2>
+        <p>We have a dedicated team of professionals who are committed to serving your financial needs.</p>
+    </div>
 
 {% endblock %}
