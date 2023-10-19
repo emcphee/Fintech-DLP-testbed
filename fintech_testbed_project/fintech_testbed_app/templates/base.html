@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'base.css' %}">
     {% block head %}{% endblock %}
 </head>
 <body>
     <header>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/login">(Login/Account depending on login state)</a>
+            <a href="/services">Services</a>
+            <a href="/aboutus">About Us</a>
+            <a href="/contactus">Contact Us</a>
+        </nav>
         {% block header %}Default Header{% endblock %}
     </header>
-    <nav>
-        <a href="/">Home</a>
-        <a href="/login">(Login/Account depending on login state)</a>
-        <a href="/services">Services</a>
-        <a href="/aboutus">About Us</a>
-        <a href="/contactus">Contact Us</a>
-    </nav>
     <main>
         {% block content %}{% endblock %}
     </main>

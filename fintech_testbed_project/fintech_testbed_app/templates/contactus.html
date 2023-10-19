@@ -2,8 +2,13 @@
 
 {% block head %}
     <title>Contact Us - Big Bank</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'homestyle.css' %}">
+    <style>
+        .block {
+            height: 30%;
+            width: 15%;
+            padding: 30px;
+        }
+    </style>
 {% endblock %}
 
 {% block header %}
@@ -11,32 +16,37 @@
 {% endblock %}
 
 {% block content %}
-    <h2>Contact Information</h2>
-    <p>If you have any questions or need assistance, please don't hesitate to reach out to us.</p>
-    
-    <div class="contact-details">
-        <p>Email: contact@yourbank.com</p>
-        <p>Phone: +123-456-7890</p>
-        <p>Address: 123 Main Street, City, Country</p>
+    <div class="block">
+        <h2>Contact Information</h2>
+        <p>If you have any questions or need assistance, please don't hesitate to reach out to us.</p>
+        
+        <div class="contact-details">
+            <p>Email: contact@yourbank.com</p>
+            <p>Phone: +123-456-7890</p>
+            <p>Address: 123 Main Street, City, Country</p>
+        </div>
     </div>
 
-    <h2>Contact Form</h2>
-    <p>Send us a message:</p>
-    
-    <form class="contact-form" action="#" method="post">
-        <div class="form-group">
-            <label for="name">Your Name:</label>
-            <input type="text" id="name" name="name" required>
-        </div>
-        <div class="form-group">
-            <label for="email">Your Email:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        <div class="form-group">
-            <label for="message">Message:</label>
-            <textarea id="message" name="message" rows="4" required></textarea>
-        </div>
-        <button class="submit-btn" type="submit">Submit</button>
-    </form>
+    <div class="block">
+        <h2>Contact Form</h2>
+        <p>Send us a message:</p>
+        
+        <form class="contact-form" action="#" method="post">
+            <div class="form-group">
+                <label for="name">Your Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Your Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="4" required></textarea>
+            </div>
+            <button class="submit-btn" type="submit">Submit</button>
+        </form>
+    </div>
+
 </div>
 {% endblock %}

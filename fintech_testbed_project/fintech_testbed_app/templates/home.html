@@ -4,14 +4,23 @@
     <title>Big Bank - Welcome</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'homestyle.css' %}">
+    <link rel="stylesheet" href="{% static 'scripts/home_carousel.js' %}">
 {% endblock %}
-
 {% block header %}
-    Welcome to Big Bank
+    <h1>Home</h1>
 {% endblock %}
 
 {% block content %}
-    <h2>Welcome to Big Bank</h2>
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel velit id libero finibus bibendum.</p>
-    <p>Nullam eu libero eget urna condimentum vehicula. Suspendisse potenti. Donec rhoncus orci id vestibulum.</p>
+    {# Carousel #}
+    <div class="carousel">  
+        <div class="three-carousel-images">   
+            <img src="https://imageio.forbes.com/specials-images/imageserve/633a774a842d06ecd68286ff/The-5-Biggest-Business-Trends-For-2023/960x0.jpg" alt="exampletext" class="carousel-image" id="next-image">
+            <img src="https://imageio.forbes.com/specials-images/imageserve/633a774a842d06ecd68286ff/The-5-Biggest-Business-Trends-For-2023/960x0.jpg" alt="exampletext" class="carousel-image" id="current-image">
+            <img src="https://imageio.forbes.com/specials-images/imageserve/633a774a842d06ecd68286ff/The-5-Biggest-Business-Trends-For-2023/960x0.jpg" alt="exampletext" class="carousel-image" id="previous-image">
+        </div>
+        <div class="carousel-button-container">
+            <button class="carousel-button prev" id="prev"><</button>
+            <button class="carousel-button next" id="next">></button>
+        </div>
+    </div>
 {% endblock %}
