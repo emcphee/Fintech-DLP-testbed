@@ -49,3 +49,9 @@
 .error-message {
     color: red;
 }
+
+main {
+    padding-bottom: 400px;
+    padding-top: 100px;
+    background-color: #f9f9f9;
+}

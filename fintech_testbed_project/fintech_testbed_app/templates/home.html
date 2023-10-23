@@ -1,26 +1,65 @@
 {% extends "base.html" %}
 
 {% block head %}
-    <title>Big Bank - Welcome</title>
+    <title>Big Bank - Home</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'homestyle.css' %}">
-    <link rel="stylesheet" href="{% static 'scripts/home_carousel.js' %}">
-{% endblock %}
-{% block header %}
-    <h1>Home</h1>
 {% endblock %}
 
 {% block content %}
-    {# Carousel #}
-    <div class="carousel">  
-        <div class="three-carousel-images">   
-            <img src="https://imageio.forbes.com/specials-images/imageserve/633a774a842d06ecd68286ff/The-5-Biggest-Business-Trends-For-2023/960x0.jpg" alt="exampletext" class="carousel-image" id="next-image">
-            <img src="https://imageio.forbes.com/specials-images/imageserve/633a774a842d06ecd68286ff/The-5-Biggest-Business-Trends-For-2023/960x0.jpg" alt="exampletext" class="carousel-image" id="current-image">
-            <img src="https://imageio.forbes.com/specials-images/imageserve/633a774a842d06ecd68286ff/The-5-Biggest-Business-Trends-For-2023/960x0.jpg" alt="exampletext" class="carousel-image" id="previous-image">
+<div class="login-container">
+    <form class="login-form" action="#" method="post">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
         </div>
-        <div class="carousel-button-container">
-            <button class="carousel-button prev" id="prev"><</button>
-            <button class="carousel-button next" id="next">></button>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button class="login-btn" type="submit">Login</button>
+    </form>
+</div>
+
+<div class="banner-image-container">
+    <img src="{% static 'images/lance-asper-DerLYBxbrsw-unsplash.jpg' %}" alt="Photo of a snowy town by Lance Asper" class="home-background">
+    <div class="overlay-container">
+        <div class="text-overlay">
+            <h1>Looking for a secure banking experience?</h1>
+            <a href="/register" class="register-button">Register Now</a>
         </div>
     </div>
+
+    <div class="photographer-credit">
+        <p>Photo Credit: Lance Asper</p>
+    </div>
+</div>
+
+<div class="company-goals-container">
+    <div class="goal-container">
+        <img src="{% static 'images/shield-lock.png' %}" alt="Clip art of a lock shaped like a shield" class="goal-image">
+        <h2>Confidentiality</h2>
+        <p>Our robust security measures and encryption protocols ensure your personal information remains strictly confidential, giving you peace of mind.</p>
+    </div>
+    <div class="goal-container">
+        <img src="{% static 'images/check-mark.png' %}" alt="Clip art of a check mark" class="goal-image">
+        <h2>Data Integrity</h2>
+        <p>Our vigilant monitoring and advanced verification processes guarantee that your financial information is tamper-proof and always dependable.</p>
+    </div>
+    <div class="goal-container">
+        <img src="{% static 'images/clock.png' %}" alt="Clip art of a clock" class="goal-image">
+        <h2>Availability</h2>
+        <p>Enjoy banking convenience 24/7. Our redundant systems and sturdy infrastructure mean your accounts are accessible whenever you need them, ensuring you're never locked out of your financial world.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<a href="https://www.freepik.com/free-vector/shield_35202650.htm#query=lock&position=3&from_view=search&track=sph">Shield-lock image by juicy_fish</a>
+|
+<a href="https://www.vecteezy.com/png/22068737-approved-sign-and-symbol-clip-art">Check-mark image by Ovidiu Timplaru</a>
+|
+<a href="https://www.freepik.com/free-vector/illustration-clock_2606098.htm#page=2&query=clock%20clipart&position=4&from_view=keyword&track=ais">Clock image by rawpixel.com</a>
+|
+<a href="https://unsplash.com/photos/snow-covered-mountains-during-daytime-DerLYBxbrsw">Snowy mountains image by Lance Asper</a>
 {% endblock %}

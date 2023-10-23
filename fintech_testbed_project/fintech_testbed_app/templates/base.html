@@ -4,25 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load static %}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&family=Poppins:wght@900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&family=Poppins:wght@900&family=Roboto:wght@100;300&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="{% static 'base.css' %}">
+    
     {% block head %}{% endblock %}
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/login">(Login/Account depending on login state)</a>
-            <a href="/services">Services</a>
-            <a href="/aboutus">About Us</a>
-            <a href="/contactus">Contact Us</a>
-        </nav>
-        {% block header %}Default Header{% endblock %}
-    </header>
+    <div class="nav-bar">
+        <div class="left-nav">
+            <div class="logo">
+                <img src="{% static 'images/big-bank-logo.png' %}" alt="Big Bank Logo" style="width: 125px; height: auto;">
+            </div>
+        </div>
+
+        <div class="right-nav">
+            <div class="nav-link">
+                <a href="/">Home</a>
+            </div>
+            
+            <div class="nav-link">
+                <a href="/login">Login</a>
+            </div>
+
+            <div class="nav-link">
+                <a href="/services">Services</a>
+            </div>
+
+            <div class="nav-link">
+                <a href="/aboutus">About Us</a>
+            </div>
+
+            <div class="nav-link">
+                <a href="/contactus">Contact Us</a>
+            </div>
+        </div>
+    </div>
+
     <main>
         {% block content %}{% endblock %}
     </main>
+
     <footer>
-        <p>&copy; 2023 Big Bank. All rights reserved.</p>
+        {% block footer %}{% endblock %}
+        <p>&copy; 2023 Big Bank</p>
     </footer>
 </body>
 </html>
