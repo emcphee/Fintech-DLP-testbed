@@ -7,7 +7,7 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL,
 
     password_hash VARCHAR(60) NOT NULL,
-    password_salt CHAR(16) NOT NULL,
+    password_salt CHAR(29) NOT NULL,
 
     UNIQUE (username),
     UNIQUE (email),
