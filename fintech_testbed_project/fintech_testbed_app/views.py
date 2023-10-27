@@ -1,13 +1,112 @@
 from django.shortcuts import render
+from django.shortcuts import render
+from django.db import connection
+from django.db.models import Q
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as l_in
 from django.http import HttpResponse
+from django.conf import settings
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+from .models import *
+import pyotp
+import bcrypt
+from urllib.parse import urlencode
 
 def home(request):
     return render(request, "home.html")
 
 def login(request):
-    return render(request, "login.html")
+    # initialize the checks
+    error_message = None
+    valid_credentials = None
+    
+    # check if a button is clicked
+    if request.method == 'POST':
+        # check where the button was pressed
+        form_type = request.POST.get('form_type', '')
+        
+        # check form type
+        if form_type == 'form1': # user password check
+            # get username and password typed
+            username = request.POST['username']
+            password = request.POST['password']
+
+            # query to check if it exists in the db
+            condition = Q(username=username)
+            obj = Client.objects.filter(condition)
+            obj_exists = obj.exists()
+
+            # if found
+            if obj_exists:
+                salt = obj[0].salt
+                hashed_password = obj[0].hashed_password
+                
+                hashed_entered_password = bcrypt.hashpw(password.encode('utf-8'), salt.encode('utf-8'))
+
+                if hashed_entered_password == hashed_password.encode('utf-8'):
+                    # update credentials
+                    valid_credentials = True
+                    
+                    # generate 2FA code
+                    secret = pyotp.random_base32()
+                    totp = pyotp.TOTP(secret, interval=300)
+                    
+                    # set the session secret key and a temp user that will be
+                    # discarded later
+                    request.session['secret'] = secret
+                    request.session['temp_user'] = username
+
+                    # set the message to be sent
+                    message = Mail(
+                        from_email='bigbankwebservice@gmail.com',
+                        to_emails= obj[0].email,
+                        subject='Hello, World!',
+                        plain_text_content=totp.now()
+                    )
+
+                    # attempt to send email
+                    # NOTE COMMENTED OUT FOR NOW UNCOMMENT FOR EMAIL TO WORK
+                    try:
+                        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+                        print(totp.now())
+                        # uncomment for email to be sent
+                        #response = sg.send(message)
+                    except Exception as e:
+                        print(e)
+                else:
+                    error_message = "Invalid Password"
+            else:
+                error_message = "Invalid Username"
+        elif form_type == 'form2': # initialize 2FA code check
+            # get session vars
+            secret = request.session.get('secret')
+            username = request.session.get('temp_user')
+
+            # get token
+            totp = pyotp.TOTP(secret, interval=300)
+            token = request.POST['token']
+
+            # if the token matches the current var
+            if token == totp.now():
+                # set the login user and remove the temp user
+                request.session['temp_user'] = None
+                request.session['username'] = username
+                return home(request) 
+            else:
+                error_message = "Wrong code"
+            
+            # make sure the page stays on submit
+            valid_credentials = True
+
+    # stay on page
+    return render(request, "login.html", 
+        {
+            "error_message": error_message,
+            "valid_credentials": valid_credentials
+        }
+    )
 
 def services(request):
      return render(request, "services.html")
@@ -19,30 +118,26 @@ def contactus(request):
     return render(request, "contactus.html")
 
 def register(request):
-    return render(request, "register.html")
-
-def register(request):
     error_message = None  # Initialize error message to None
-
     if request.method == 'POST':
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
         password_confirm = request.POST['password_confirm']
 
+        
         # Check if the passwords match
-        if password == password_confirm:
-            # Create a new user
-            user = User.objects.create_user(username=username, email=email, password=password)
-            user.save()
+        if password == password_confirm and email and not Client.objects.filter(username=username).exists():
+            salt = bcrypt.gensalt()
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
 
-            # Log the user in
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)
+            # Create a new client
+            new_item = Client(username=username, email=email, salt=salt.decode('utf-8'), hashed_password=hashed_password.decode('utf-8'))
+            
+            new_item.save()
 
             # Redirect to a success page or home page
-            return redirect('home')
+            return home(request)
         else:
             # Passwords don't match, set error message
             error_message = "Confirmed password must match the password."

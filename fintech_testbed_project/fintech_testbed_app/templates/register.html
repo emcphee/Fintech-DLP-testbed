@@ -37,29 +37,7 @@
                 <label for="password_confirm">Confirm Password:</label>
                 <input type="password" id="password_confirm" name="password_confirm" required>
             </div>
-            <button class="register-btn" type="submit">Register</button>
+            <button class="register-btn" type="Submit">Register</button>
         </form>
     </div>
-
-    <script>
-        // Get the form element with the class "register-form"
-        const registerForm = document.querySelector('.register-form');
-    
-        // Add an event listener to the form's submit action
-        registerForm.addEventListener('submit', function (event) {
-            event.preventDefault(); // Prevent the default form submission
-    
-            // Access form input values
-            const username = document.querySelector('#username').value;
-            const email = document.querySelector('#email').value;
-            const password = document.querySelector('#password').value;
-            const passwordConfirm = document.querySelector('#password_confirm').value;
-    
-            // You can do something with the values here
-            console.log('Username:', username);
-            console.log('Email:', email);
-            console.log('Password:', password);
-            console.log('Password Confirm:', passwordConfirm);
-        });
-    </script>
 {% endblock %}

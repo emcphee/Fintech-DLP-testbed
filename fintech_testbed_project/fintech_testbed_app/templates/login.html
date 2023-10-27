@@ -10,7 +10,14 @@
 {% block content %}
     <div class="login-container">
         <h2>Login to Your Account</h2>
-        <form class="login-form" action="#" method="post">
+        
+        {% if error_message %}
+        <p class="error-message">{{ error_message }}</p>
+        {% endif %}
+
+        {% if not valid_credentials %}
+        <form class="login-form" method="post">
+            {% csrf_token %}
             <div class="form-group">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required>
@@ -19,27 +26,21 @@
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button class="login-btn" type="submit">Login</button>
+            <button class="login-btn" type="submit" name="form_type" value="form1">Login</button>
         </form>
+        {% endif %}
+
+        {% if valid_credentials %}
+        <form class="login-form" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="token">Access Token:</label>
+                <input type="text" id="token" name="token" required>
+            </div>
+            <button class="login-btn" type="submit" name="form_type" value="form2">Submit</button>
+        </form>
+        {% endif %}
 
         <p>Don't have an account? <a href="{% url 'register' %}">Register</a></p> <!-- Link to the registration page -->
     </div>
-
-    <script>
-        // Get the form element with the class "register-form"
-        const registerForm = document.querySelector('.login-form');
-    
-        // Add an event listener to the form's submit action
-        registerForm.addEventListener('submit', function (event) {
-            event.preventDefault(); // Prevent the default form submission
-    
-            // Access form input values
-            const username = document.querySelector('#username').value;
-            const password = document.querySelector('#password').value;
-    
-            // You can do something with the values here
-            console.log('Username:', username);
-            console.log('Password:', password);
-        });
-    </script>
 {% endblock %}
