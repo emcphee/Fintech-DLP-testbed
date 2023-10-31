@@ -35,7 +35,7 @@ def login(request):
         form_type = request.POST.get('form_type', '')
         
         # check form type
-        if form_type == 'form1': # user password check
+        if form_type == 'enter-credentials': # user password check
             # get username and password typed
             username = request.POST['username']
             password = request.POST['password']
@@ -85,7 +85,7 @@ def login(request):
                     error_message = "Invalid Password"
             else:
                 error_message = "Invalid Username"
-        elif form_type == 'form2': # initialize 2FA code check
+        elif form_type == 'enter-OTP': # initialize 2FA code check
             # get session vars
             secret = request.session.get('secret')
             username = request.session.get('temp_user')
