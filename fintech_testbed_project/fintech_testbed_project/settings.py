@@ -76,8 +76,12 @@ WSGI_APPLICATION = 'fintech_testbed_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'db', 
+        'USER': 'postgres',
+        'PASSWORD': 'password',
+        'HOST': '127.0.0.1', 
+        'PORT': '5432',
     }
 }
 
@@ -122,3 +126,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+SENDGRID_API_KEY = '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'

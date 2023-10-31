@@ -46,9 +46,16 @@ class Client(models.Model):
 
     )
 
-    password = models.CharField(
+    salt = models.CharField(
         max_length=100,
-        help_text='Enter a password'
+        default=None,
+        help_text='Enter a salt'
+    )
+
+    hashed_password = models.CharField(
+        max_length=100,
+        default=None,
+        help_text='Enter a hash'
     )
 
     def __str__(self):
