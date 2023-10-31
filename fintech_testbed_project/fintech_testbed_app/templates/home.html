@@ -7,6 +7,8 @@
 {% endblock %}
 
 {% block content %}
+
+{% if not is_logged_in %}
 <div class="login-container">
     <form class="login-form" action="#" method="post">
         <div class="form-group">
@@ -20,13 +22,19 @@
         <button class="login-btn" type="submit">Login</button>
     </form>
 </div>
+{% endif %}
 
 <div class="banner-image-container">
     <img src="{% static 'images/lance-asper-DerLYBxbrsw-unsplash.jpg' %}" alt="Photo of a snowy town by Lance Asper" class="home-background">
     <div class="overlay-container">
         <div class="text-overlay">
-            <h1>Looking for a secure banking experience?</h1>
-            <a href="/register" class="register-button">Register Now</a>
+            {% if not is_logged_in %}
+                <h1>Looking for a secure banking experience?</h1>
+                <a href="/register" class="register-button">Register Now</a>
+            {% else %}
+                <h1>Welcome back {{username}}!</h1>
+                <a href="/account" class="register-button">View Account</a>
+            {% endif %}
         </div>
     </div>
 

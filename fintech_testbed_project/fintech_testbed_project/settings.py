@@ -79,7 +79,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'db', 
         'USER': 'postgres',
-        'PASSWORD': 'password',
+        'PASSWORD': 'admin',
         'HOST': '127.0.0.1', 
         'PORT': '5432',
     }
@@ -128,4 +128,4 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
-SENDGRID_API_KEY = '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'
+SENDGRID_API_KEY = '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'

@@ -27,9 +27,15 @@
                 <a href="/">Home</a>
             </div>
             
+            {% if is_logged_in %}
+            <div class="nav-link">
+                <a href="/account">Account</a>
+            </div>
+            {% else %}
             <div class="nav-link">
                 <a href="/login">Login</a>
             </div>
+            {% endif %}
 
             <div class="nav-link">
                 <a href="/services">Services</a>

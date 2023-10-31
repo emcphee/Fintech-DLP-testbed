@@ -17,6 +17,9 @@
 }
 
 .form-group {
+    display: flex;
+    justify-content: flex-start;
+    
     margin-bottom: 20px;
 }
 
@@ -26,8 +29,7 @@
 }
 
 .form-group input {
-    width: 95.5%;
-    padding: 8px;
+    width: 90%;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
@@ -48,4 +50,10 @@
 
 .error-message {
     color: red;
+}
+
+main {
+    padding-bottom: 400px;
+    padding-top: 100px;
+    background-color: #f9f9f9;
 }

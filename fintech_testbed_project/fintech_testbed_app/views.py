@@ -14,8 +14,15 @@ import pyotp
 import bcrypt
 from urllib.parse import urlencode
 
+BYPASS_2FA_DEBUG = True
+
 def home(request):
-    return render(request, "home.html")
+    page_args = {
+        'is_logged_in': ('username' in request.session)
+    }
+    if page_args['is_logged_in']:
+        page_args['username'] = request.session['username']
+    return render(request, "home.html", page_args)
 
 def login(request):
     # initialize the checks
@@ -70,11 +77,10 @@ def login(request):
                     # NOTE COMMENTED OUT FOR NOW UNCOMMENT FOR EMAIL TO WORK
                     try:
                         sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-                        print(totp.now())
                         # uncomment for email to be sent
                         #response = sg.send(message)
                     except Exception as e:
-                        print(e)
+                        print("OTP Send Error:", e)
                 else:
                     error_message = "Invalid Password"
             else:
@@ -89,7 +95,7 @@ def login(request):
             token = request.POST['token']
 
             # if the token matches the current var
-            if token == totp.now():
+            if BYPASS_2FA_DEBUG or token == totp.now():
                 # set the login user and remove the temp user
                 request.session['temp_user'] = None
                 request.session['username'] = username
@@ -100,22 +106,31 @@ def login(request):
             # make sure the page stays on submit
             valid_credentials = True
 
+    page_args = {
+        'is_logged_in': ('username' in request.session),
+        'error_message' : error_message,
+        'valid_credentials' : valid_credentials
+    }
     # stay on page
-    return render(request, "login.html", 
-        {
-            "error_message": error_message,
-            "valid_credentials": valid_credentials
-        }
-    )
+    return render(request, "login.html", page_args)
 
 def services(request):
-     return render(request, "services.html")
+    page_args = {
+        'is_logged_in': ('username' in request.session)
+    }
+    return render(request, "services.html", page_args)
 
 def aboutus(request):
-     return render(request, "aboutus.html")
+    page_args = {
+        'is_logged_in': ('username' in request.session)
+    }
+    return render(request, "aboutus.html", page_args)
 
 def contactus(request):
-    return render(request, "contactus.html")
+    page_args = {
+        'is_logged_in': ('username' in request.session)
+    }
+    return render(request, "contactus.html", page_args)
 
 def register(request):
     error_message = None  # Initialize error message to None
@@ -142,4 +157,8 @@ def register(request):
             # Passwords don't match, set error message
             error_message = "Confirmed password must match the password."
 
-    return render(request, "register.html", {"error_message": error_message})
+    page_args = {
+        "error_message": error_message,
+        'is_logged_in': ('username' in request.session)
+    }
+    return render(request, "register.html", page_args)
