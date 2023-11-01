@@ -1,14 +1,9 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block head %}
     <title>Contact Us - Big Bank</title>
-    <style>
-        .block {
-            height: 30%;
-            width: 15%;
-            padding: 30px;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'contactus.css' %}">
 {% endblock %}
 
 {% block header %}
@@ -16,12 +11,13 @@
 {% endblock %}
 
 {% block content %}
+<div class="block-container">
     <div class="block">
         <h2>Contact Information</h2>
         <p>If you have any questions or need assistance, please don't hesitate to reach out to us.</p>
         
         <div class="contact-details">
-            <p>Email: contact@yourbank.com</p>
+            <p>Email: contact@bigbank.com</p>
             <p>Phone: +123-456-7890</p>
             <p>Address: 123 Main Street, City, Country</p>
         </div>
@@ -47,6 +43,5 @@
             <button class="submit-btn" type="submit">Submit</button>
         </form>
     </div>
-
 </div>
 {% endblock %}

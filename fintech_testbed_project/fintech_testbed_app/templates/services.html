@@ -2,15 +2,8 @@
 
 {% block head %}
     <title>Services - Big Bank</title>
-    <style>
-        .block {
-            height: 30%;
-            width: 15%;
-            padding: 30px;
-        }
-    </style>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'homestyle.css' %}">
+    <link rel="stylesheet" href="{% static 'services.css' %}">
 {% endblock %}
 
 {% block header %}
@@ -18,28 +11,30 @@
 {% endblock %}
 
 {% block content %}
-<div class="block">
-    <h2>Explore Our Services</h2>
-    <p>At Your Bank, we offer a range of financial services to meet your needs:</p>
+<div class="block-container">
+    <div class="block">
+        <h2>Explore Our Services</h2>
+        <p>At Your Bank, we offer a range of financial services to meet your needs:</p>
+        
+        <ul>
+            <li>Savings Accounts</li>
+            <li>Checking Accounts</li>
+            <li>Loans and Mortgages</li>
+            <li>Credit Cards</li>
+            <li>Investment Services</li>
+        </ul>
+    </div>
     
-    <ul>
-        <li>Savings Accounts</li>
-        <li>Checking Accounts</li>
-        <li>Loans and Mortgages</li>
-        <li>Credit Cards</li>
-        <li>Investment Services</li>
-    </ul>
-</div>
-
-<div class="block">
-    <h2>Why Choose Us</h2>
-    <p>We are committed to providing the best financial solutions with a focus on:</p>
-    <ul>
-        <li>Customer Satisfaction</li>
-        <li>Security and Privacy</li>
-        <li>Financial Expertise</li>
-        <li>Innovation and Technology</li>
-    </ul>
+    <div class="block">
+        <h2>Why Choose Us</h2>
+        <p>We are committed to providing the best financial solutions with a focus on:</p>
+        <ul>
+            <li>Customer Satisfaction</li>
+            <li>Security and Privacy</li>
+            <li>Financial Expertise</li>
+            <li>Innovation and Technology</li>
+        </ul>
+    </div>
 </div>
 
 
