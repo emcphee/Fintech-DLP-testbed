@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head %}
+    <title>Account - Big Bank</title>
+    <link rel="stylesheet" href="{% static 'account.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="account-container">
+        
+    <div class="account-name-container">
+        <p><span id="username">username</span>'s Account</p>
+    </div>
+    <div class="transactions-and-label">
+        <label>Recent Transactions:</label>
+        <div class="transactions-container">
+            <div class="transaction-light" id="labels">
+                <span class="date">Date</span>
+                <span class="description">Description</span>
+                <span class="sender">Sender</span>
+                <span class="receiver">Receiver</span>
+                <span class="balance">Balance</span>
+            </div>
+            <div class="transaction-dark" id="0">
+                <span class="date">10/31/2023</span>
+                <span class="description">This is an example description for a transaction</span>
+                <span class="sender">example sender</span>
+                <span class="receiver">example receiver</span>
+                <span class="balance">$100</span>
+            </div>
+            <div class="transaction-light" id="1">
+
+            </div>
+            <div class="transaction-dark" id="2">
+
+            </div>
+            <div class="transaction-light" id="3">
+
+            </div>
+            <div class="transaction-dark" id="4">
+
+            </div>
+            <div class="transaction-light" id="5">
+
+            </div>
+            <div class="transaction-dark" id="6">
+
+            </div>
+            <div class="transaction-light" id="7">
+
+            </div>
+            <div class="transaction-dark" id="8">
+
+            </div>
+            <div class="transaction-light" id="9">
+
+            </div>
+        </div>
+    </div>
+    <div class="balance-container">
+        Balance:&nbsp;<span id="balance-value">default</div>
+    </div>
+    
+</div>
+
+{% endblock %}

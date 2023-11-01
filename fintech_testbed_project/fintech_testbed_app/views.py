@@ -162,3 +162,9 @@ def register(request):
         'is_logged_in': ('username' in request.session)
     }
     return render(request, "register.html", page_args)
+
+def account(request):
+    if 'username' in request.session:
+        return render(request, "account.html")
+    else:
+        return render(request, "home.html")

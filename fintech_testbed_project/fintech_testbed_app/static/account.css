@@ -1,0 +1,103 @@
+.account-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 100%;
+    background-color: rgb(240, 240, 240);
+}
+
+.balance-container {
+    width: 16vw;
+    height: 8vh;
+    background-color: rgb(199, 199, 199);
+    border-radius: 10px;
+    font-size: 2vw;
+    margin-left: 3vw;
+    margin-top: 3vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.account-name-container {
+    position: relative;
+    width: 100%;
+    height: 10%;
+    background-color: #d4d4d4;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+}
+
+.account-name-container p {
+    font-size: 1.8vw;
+}
+
+.transactions-and-label {
+    float: right;
+    width: 55%;
+    height: 70%;
+    margin: 3vh;
+    margin-right: 6vw;
+}
+
+.transactions-and-label label {
+    font-size: 1.5vw;
+    height: 8.333%;
+}
+
+.transactions-container {
+    background-color: rgb(185, 185, 185);
+    width: 100%;
+    height: 100%;
+}
+
+.transaction-light, .transaction-dark {
+    height: 8.333%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.transaction-light {
+    background-color: #d4d4d4;
+}
+
+.transactions-container * span {
+    display: inline-block;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    font-size: 0.8vw;
+    /* add font size for actual elements here */
+}
+
+.transactions-container #labels span {
+    font-size: 1.3vw;
+}
+
+
+.date {
+    width: 10%;
+}
+.description {
+    width: 35%;
+}
+.sender {
+    width: 18%
+}
+.receiver {
+    width: 18%;
+}
+.balance {
+    width: 13%;
+}
+
+
+main {
+    position: relative;
+}
