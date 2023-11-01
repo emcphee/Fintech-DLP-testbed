@@ -11,6 +11,7 @@
 {% if not is_logged_in %}
 <div class="login-container">
     <form class="login-form" action="#" method="post">
+        {% csrf_token %}
         <div class="form-group">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
@@ -19,7 +20,7 @@
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
         </div>
-        <button class="login-btn" type="submit">Login</button>
+        <button class="login-btn" type="submit" name="form_type" value="homepage-enter-credentials">Login</button>
     </form>
 </div>
 {% endif %}
