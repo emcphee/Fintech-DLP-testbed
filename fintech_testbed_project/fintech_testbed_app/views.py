@@ -164,7 +164,14 @@ def register(request):
     return render(request, "register.html", page_args)
 
 def account(request):
+    page_args = {
+        'is_logged_in': ('username' in request.session)
+    }
+
+    if page_args['is_logged_in']:
+        page_args['username'] = request.session['username']
+    
     if 'username' in request.session:
-        return render(request, "account.html")
+        return render(request, "account.html", page_args)
     else:
         return render(request, "home.html")
