@@ -224,8 +224,27 @@ def account(request):
         # Populate username
         page_args['username'] = request.session['username']
         
+        # get the user
+        condition = Q(username=page_args['username'])
+        user = Client.objects.filter(condition)
+        user = user[0]
+
+        # get the bank account
+        condition = Q(client_id=user)
+        bank_account = BankAccount.objects.filter(condition)
+        bank_account = bank_account[0]
+
+        # commit this out if you don't want dummy data
+        for i in range(10):
+            new_item = Transactions(balance=i, datetime="Today", description="Random Desc", bank_id_id=bank_account.id, reciever_id=user.id, sender_id=user.id)
+            new_item.save()
+
+        # get the first 10 transactions
+        condition = Q(bank_id=bank_account)
+        transactions = Transactions.objects.filter(condition)[:10]
+
         # Populate balance
-        page_args['balance'] = 0 #change this to query
+        page_args['balance'] = bank_account.savings #change this to query
 
         # Populate Recent Transactions
         base_transaction = """
@@ -234,9 +253,9 @@ def account(request):
                 <span class="sender">{}</span>
                 <span class="receiver">{}</span>
                 <span class="balance">{}</span>"""
-        transactions = ["" for _ in range(10)]
+
         for index, transaction in enumerate(transactions):
-            date,description,sender,receiver,balance = "aaa","bbb","ccc","ddd","eee" # change this to query
+            date,description,sender,receiver,balance = transaction.datetime,transaction.description,transaction.sender_id,transaction.reciever_id,transaction.balance # change this to query
             cur_transaction = base_transaction.format(date,description,sender,receiver,balance)
             page_args['transaction'+str(index)] = cur_transaction
             print('transaction'+str(index))
