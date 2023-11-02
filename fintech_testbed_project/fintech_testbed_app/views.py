@@ -233,11 +233,12 @@ def account(request):
                 <span class="sender">{}</span>
                 <span class="receiver">{}</span>
                 <span class="balance">{}</span>"""
-        transactions = []
-        for transaction, index in enumerate(transactions):
-            date,description,sender,receiver,balance = "","","","","" # change this to query
+        transactions = ["" for _ in range(10)]
+        for index, transaction in enumerate(transactions):
+            date,description,sender,receiver,balance = "aaa","bbb","ccc","ddd","eee" # change this to query
             cur_transaction = base_transaction.format(date,description,sender,receiver,balance)
             page_args['transaction'+str(index)] = cur_transaction
+            print('transaction'+str(index))
         
         return render(request, "account.html", page_args)
     else:
