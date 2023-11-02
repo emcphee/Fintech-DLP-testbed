@@ -199,8 +199,9 @@ def register(request):
 
             # Create a new client
             new_item = Client(username=username, email=email, salt=salt.decode('utf-8'), hashed_password=hashed_password.decode('utf-8'))
-            
             new_item.save()
+            new_account = BankAccount(client_id=new_item, savings=0)
+            new_account.save()
 
             # Redirect to a success page or home page
             return home(request)
