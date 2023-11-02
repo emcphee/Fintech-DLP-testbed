@@ -14,7 +14,7 @@ import bcrypt
 from urllib.parse import urlencode
 from django.urls import reverse
 
-BYPASS_2FA_DEBUG = False
+BYPASS_2FA_DEBUG = True
 
 def home(request):
     page_args = {
@@ -220,9 +220,25 @@ def account(request):
     }
 
     if page_args['is_logged_in']:
+        # Populate username
         page_args['username'] = request.session['username']
-    
-    if 'username' in request.session:
+        
+        # Populate balance
+        page_args['balance'] = 0 #change this to query
+
+        # Populate Recent Transactions
+        base_transaction = """
+                <span class="date">{}</span>
+                <span class="description">{}</span>
+                <span class="sender">{}</span>
+                <span class="receiver">{}</span>
+                <span class="balance">{}</span>"""
+        transactions = []
+        for transaction, index in enumerate(transactions):
+            date,description,sender,receiver,balance = "","","","","" # change this to query
+            cur_transaction = base_transaction.format(date,description,sender,receiver,balance)
+            page_args['transaction'+str(index)] = cur_transaction
+        
         return render(request, "account.html", page_args)
     else:
         return render(request, "home.html")
