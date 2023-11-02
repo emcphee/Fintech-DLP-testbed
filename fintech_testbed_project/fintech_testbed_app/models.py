@@ -81,3 +81,43 @@ class BankAccount(models.Model):
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id}'
+
+class Transactions(models.Model):
+    id = models.UUIDField(
+        primary_key=True, 
+        default=uuid.uuid4,
+        help_text = 'Unique ID for the transactions'
+    )
+
+    bank_id = models.ForeignKey(
+        BankAccount,
+        on_delete=models.CASCADE,
+        null=False,
+        help_text = 'The ID of the bamkaccount'
+    )
+
+    # temp
+    sender = models.ForeignKey(
+        Client,
+        on_delete=models.CASCADE,
+        related_name='sent_transactions', 
+        null=False,
+        help_text = 'The ID of the client'
+    )
+
+    # temp
+    reciever = models.ForeignKey(
+        Client,
+        on_delete=models.CASCADE,
+        related_name='received_transactions',
+        null=False,
+        help_text = 'The ID of the client'
+    )
+
+    balance = models.FloatField()
+    datetime = models.CharField(max_length=30)
+    description = models.CharField(max_length=30)
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
