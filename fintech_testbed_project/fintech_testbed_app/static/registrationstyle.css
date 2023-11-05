@@ -1,3 +1,24 @@
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+label, input {
+    width: 15vw;
+    min-width: 175px;
+    max-width: 300px;
+}
+
+input {
+    font-size: 16px;
+    padding: 6px;
+}
+
+label {
+    font-family: "Open Sans", sans-serif;
+    font-size: 12px;
+}
+
 .register-container {
     max-width: 400px;
     margin: 0 auto;
@@ -29,7 +50,7 @@
 }
 
 .form-group input {
-    width: 90%;
+    width: 95%;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
