@@ -1,7 +1,7 @@
 from django.db import models
 import uuid
 
-class Admin(models.Model):
+class Cashier(models.Model):
     id = models.UUIDField(
         primary_key=True, 
         default=uuid.uuid4,
@@ -11,33 +11,6 @@ class Admin(models.Model):
     username = models.CharField(
         max_length=100, 
         help_text='Enter a admin username'
-    )
-
-    email = models.CharField(
-        max_length=100,
-        help_text='Enter a client email'
-
-    )
-
-    password = models.CharField(
-        max_length=100,
-        help_text='Enter a password'
-    )
-
-    def __str__(self):
-        """String for representing the Model object."""
-        return f'{self.id}'
-
-class Client(models.Model):
-    id = models.UUIDField(
-        primary_key=True, 
-        default=uuid.uuid4,
-        help_text = 'Unique ID for the client'
-    )
-    
-    username = models.CharField(
-        max_length=100, 
-        help_text='Enter a client username'
     )
 
     email = models.CharField(
@@ -62,25 +35,77 @@ class Client(models.Model):
         """String for representing the Model object."""
         return f'{self.id}'
 
-class BankAccount(models.Model):
+class Admin(models.Model):
     id = models.UUIDField(
         primary_key=True, 
         default=uuid.uuid4,
-        help_text = 'Unique ID for the bank account'
+        help_text = 'Unique ID for the admin'
+    )
+    
+    username = models.CharField(
+        max_length=100, 
+        help_text='Enter a admin username'
     )
 
-    client_id = models.ForeignKey(
-        Client,
-        on_delete=models.CASCADE,
-        null=False,
-        help_text = 'The ID of the client using this account'
+    email = models.CharField(
+        max_length=100,
+        help_text='Enter a client email'
+
     )
 
-    savings = models.FloatField()
+    salt = models.CharField(
+        max_length=100,
+        default=None,
+        help_text='Enter a salt'
+    )
+
+    hashed_password = models.CharField(
+        max_length=100,
+        default=None,
+        help_text='Enter a hash'
+    )
 
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id}'
+
+class Client(models.Model):
+    id = models.UUIDField(
+        primary_key=True, 
+        default=uuid.uuid4,
+        help_text = 'Unique ID for the client'
+    )
+    
+    username = models.CharField(
+        max_length=100, 
+        help_text='Enter a client username'
+    )
+
+    email = models.CharField(
+        max_length=100,
+        help_text='Enter a client email'
+    )
+
+    salt = models.CharField(
+        max_length=100,
+        default=None,
+        help_text='Enter a salt'
+    )
+
+    hashed_password = models.CharField(
+        max_length=100,
+        default=None,
+        help_text='Enter a hash'
+    )
+
+    balance = models.FloatField()
+
+    is_business = models.BooleanField(default=False)
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
+
 
 class Transactions(models.Model):
     id = models.UUIDField(
@@ -89,19 +114,12 @@ class Transactions(models.Model):
         help_text = 'Unique ID for the transactions'
     )
 
-    bank_id = models.ForeignKey(
-        BankAccount,
-        on_delete=models.CASCADE,
-        null=False,
-        help_text = 'The ID of the bamkaccount'
-    )
-
     # temp
     sender = models.ForeignKey(
         Client,
         on_delete=models.CASCADE,
         related_name='sent_transactions', 
-        null=False,
+        default=None,
         help_text = 'The ID of the client'
     )
 
@@ -110,7 +128,7 @@ class Transactions(models.Model):
         Client,
         on_delete=models.CASCADE,
         related_name='received_transactions',
-        null=False,
+        default=None,
         help_text = 'The ID of the client'
     )
 
@@ -121,3 +139,4 @@ class Transactions(models.Model):
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id}'
+
