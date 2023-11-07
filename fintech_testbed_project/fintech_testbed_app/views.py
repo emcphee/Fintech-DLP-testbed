@@ -11,6 +11,7 @@ from sendgrid.helpers.mail import Mail
 from .models import *
 import pyotp
 import bcrypt
+import re
 from urllib.parse import urlencode
 from django.urls import reverse
 
@@ -183,17 +184,47 @@ def contactus(request):
     }
     return render(request, "contactus.html", page_args)
 
+def is_strong_password(password):
+    # Check if the password is at least 8 characters long
+    if len(password) < 8:
+        return False
+
+    # Check if the password contains at least one uppercase letter
+    if not any(char.isupper() for char in password):
+        return False
+
+    # Check if the password contains at least one lowercase letter
+    if not any(char.islower() for char in password):
+        return False
+
+    # Check if the password contains at least one digit
+    if not any(char.isdigit() for char in password):
+        return False
+
+    # Check if the password contains at least one special character
+    special_characters = "!@#$%^&*()-_+=<>?/[]{}|"
+    if not any(char in special_characters for char in password):
+        return False
+
+    # If all criteria are met, the password is considered strong
+    return True
 def register(request):
     error_message = None  # Initialize error message to None
+
     if request.method == 'POST':
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
         password_confirm = request.POST['password_confirm']
 
-        
-        # Check if the passwords match
-        if password == password_confirm and email and not Client.objects.filter(username=username).exists():
+        # Check for password strength codition: longer than 8 char need upper and lower at least one digit at least one special
+        if not is_strong_password(password):
+            error_message = "Password is not strong enough."
+        elif password != password_confirm:
+            error_message = "Confirmed password must match the password."
+        elif not email or Client.objects.filter(username=username).exists():
+            error_message = "Email or username already exists."
+        else:
             salt = bcrypt.gensalt()
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
 
@@ -205,15 +236,14 @@ def register(request):
 
             # Redirect to a success page or home page
             return home(request)
-        else:
-            # Passwords don't match, set error message
-            error_message = "Confirmed password must match the password."
 
     page_args = {
         "error_message": error_message,
         'is_logged_in': ('username' in request.session)
     }
     return render(request, "register.html", page_args)
+
+
 
 def account(request):
     page_args = {
