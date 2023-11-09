@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>Cashier - Big Bank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'cashiers-interface.css' %}">
+{% endblock %}
+<div class="cashier-entry-container">
+    <div class="cashier-entry-header-container">
+        <p>Cashier's Interface</p>
+    </div>
+
+    <div class="username-entry-container-container">
+        <div class="username-entry-container">
+            <div class="username-form-container">
+                <form>
+                    <input type="text" id="username" name="username" placeholder="Enter Username">
+
+                    <div class="button-container">
+                        <button class="username-submit-button" type="submit">Checkout User</button>
+                    </div>
+                </form>
+                <div class="user-info-container">
+                    {{usernames}}'s balance:&nbsp;<span>${{balance}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="deposit-withdraw-containers">
+        <div class="deposit-form-container">
+            <h1>Deposit</h1>
+            <form>
+                <input type="text" id="deposit-amount" name="deposit-amount" placeholder="Deposit Amount">
+
+                <div class="transaction-button-container">
+                    <button class="transaction-button" type="submit">Make Deposit</button>
+                </div>
+            </form>
+        </div>
+        <div class="withdraw-form-container">
+            <h1>Withdraw</h1>
+            <form>
+                <input type="text" id="deposit-amount" name="withdraw-amount" placeholder="Withdrawal Amount">
+
+                <div class="transaction-button-container">
+                    <button class="transaction-button" type="submit">Make Withdrawal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% block content %}
+    
+{% endblock %}
