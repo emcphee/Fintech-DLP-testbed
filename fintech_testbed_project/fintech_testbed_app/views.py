@@ -13,8 +13,141 @@ import pyotp
 import bcrypt
 from urllib.parse import urlencode
 from django.urls import reverse
+from datetime import datetime
 
 BYPASS_2FA_DEBUG = True
+
+def cashier(request):
+    local_variables = locals()
+
+    # Check if the variable exists in the local variables dictionary
+    page_args = {
+        'is_logged_in': ('username' in request.session),
+    }
+
+    def get_user(username):
+        # get the user
+        sql_query = "SELECT username, balance, id FROM fintech_testbed_app_client WHERE username = %s"
+        params = (username,)
+        cursor.execute(sql_query, params)
+        result = cursor.fetchall()
+        if result:
+            result = result[0]
+            return result
+        else:
+            return None
+
+    def string_to_float(value):
+        try:
+            integer_value = float(value)
+            return integer_value
+        except ValueError:
+            return None
+
+    def make_transaction(user_id, value):
+        db_connection = connections['default']
+        cursor = db_connection.cursor()
+        print("transaction id: ")
+        print(user_id)
+        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender_id, reciever_id, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
+        params = (uuid.uuid4(), user_id, user_id, value, str(datetime.now()), "cashier check")
+        cursor.execute(new_transactions_query, params)
+    
+    def update_balance(username, balance):
+        db_connection = connections['default']
+        cursor = db_connection.cursor()
+        query = "UPDATE fintech_testbed_app_client SET balance = balance + %s WHERE username = %s"
+
+        # Execute the update query
+        cursor.execute(query, (balance, username))
+
+    # initialize the database connection
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    # check if a button is clicked
+    if request.method == 'POST':
+        # check where the button was pressed
+        form_type = request.POST.get('form_type', '')
+
+        if form_type == 'checkout-user':    # select user
+            username = request.POST['username']
+
+            # get the user
+            result = get_user(username)
+
+            if result:
+                username = result[0]
+                balance = result[1]
+                user_id = str(result[2])
+                print("User id: ")
+                print(user_id)
+
+                request.session['cashier_username'] = username
+                request.session['cashier_balance'] = balance
+                request.session['cashier_id'] = user_id
+            else:
+
+                if "cashier_username" in request.session:
+                    del request.session['cashier_username']
+                    del request.session['cashier_balance']
+                    del request.session['cashier_id'] 
+
+        elif form_type == 'make-deposit':   # make deposit
+            deposit = request.POST['deposit-amount']
+            deposit = string_to_float(deposit)
+            
+            if deposit:
+                username = request.session.get('cashier_username')
+                balance = string_to_float(request.session['cashier_balance'])
+                user_id = request.session.get('cashier_id')
+
+                # make deposit
+                print(deposit)
+                # make transaction
+                make_transaction(user_id, deposit)
+                # make update balance
+                update_balance(username, deposit)
+                
+        elif form_type == 'make-withdrawal':    # make withdrawal
+            withdraw = request.POST['withdraw-amount']
+            withdraw = string_to_float(withdraw)
+
+
+            if withdraw:
+                username = request.session.get('cashier_username')
+                balance = string_to_float(request.session.get('cashier_balance'))
+                user_id = request.session.get('cashier_id')
+                print(withdraw)
+                print(balance)
+
+                # check balance and withdraw if amount is valid
+                if withdraw <= balance:
+                    # make withdraw
+                    print(withdraw)
+                    # make transaction
+                    make_transaction(user_id, withdraw*-1)
+                    # make update balance
+                    update_balance(username, withdraw*-1)
+        
+        # update username details
+        if "cashier_username" in request.session:
+            result = get_user(request.session.get('cashier_username'))
+            username = result[0]
+            balance = result[1]
+            user_id = str(result[2])
+
+            request.session['cashier_username'] = username
+            request.session['cashier_balance'] = balance
+            request.session['cashier_id'] = user_id
+
+            page_args = {
+                'is_logged_in': ('username' in request.session),
+                "username": username,
+                "balance": balance
+            }
+
+    return render(request, "cashiers-interface.html", page_args)
 
 def home(request):
     page_args = {
@@ -258,16 +391,15 @@ def account(request):
         user_id = result[0]
         balance = result[1]
 
-        # commit this out if you don't want dummy data
-        for i in range(10):
-            # Create a new client
-            new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender_id, reciever_id, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
-            params = (uuid.uuid4(), user_id, user_id, i, "None", "None")
-            cursor.execute(new_transactions_query, params)
+        # get transactions from user account
+        sql_query = """
+            SELECT t.datetime, t.description, t.sender_id, t.reciever_id, t.balance
+            FROM fintech_testbed_app_transactions AS t
+            JOIN fintech_testbed_app_client AS u ON t.sender_id = u.id OR t.reciever_id = u.id
+            WHERE u.id = %s;
+        """
 
-        # get the first 10 transactions
-        sql_query = "SELECT datetime, description, sender_id, reciever_id, balance FROM fintech_testbed_app_transactions"
-        params = ()
+        params = (user_id,)
         cursor.execute(sql_query, params)
         result = cursor.fetchall()
         transactions = result[:10]
@@ -283,9 +415,7 @@ def account(request):
                 <span class="receiver">{}</span>
                 <span class="balance">{}</span>"""
 
-        for index, transaction in enumerate(transactions):
-            
-
+        for index, transaction in enumerate(transactions):   
             date,description,sender,receiver,balance =  transaction[0], transaction[1], transaction[2], transaction[3], transaction[4]
             cur_transaction = base_transaction.format(date,description,sender,receiver,balance)
             page_args['transaction'+str(index)] = cur_transaction
