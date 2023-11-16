@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>Transfer - Big Bank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'transfer.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="transfer-outer-container">
+    <div class="transfer-header-container">
+        <p>Make a Transfer</p>
+    </div>
+
+    <div class="transfer-container">
+        <div class="balance-container">
+            Balance:&nbsp;<span>${{balance}}</span>
+        </div>
+
+        <form class="recipient-form">
+                <label for="accountType">Send to:</label>
+                <select id="accountType" name="accountType" required>
+                    <option value="personal">Personal Account</option>
+                    <option value="business">Business Account</option>
+                </select>
+                <input type="text" id="recipient" name="recipient" placeholder="Enter recipient username">
+                <input type="text" id="transfer-amount" name="transfer-amount" placeholder="Enter transfer amount">
+                <button class="transfer-submit-button" type="submit">Transfer</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

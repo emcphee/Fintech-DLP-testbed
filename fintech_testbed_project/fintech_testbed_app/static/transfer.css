@@ -1,0 +1,97 @@
+main {
+    position: relative;
+}
+
+.transfer-outer-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 50px;
+
+    background-color: rgb(244, 244, 244);
+    border-radius: 15px;
+}
+
+.transfer-header-container {
+    position: relative;
+    width: 100%;
+    height: 10%;
+    background-color: #d4d4d4;
+    border-top-right-radius: 15px;
+    border-top-left-radius: 15px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    
+}
+
+.transfer-header-container p {
+    font-size: 1.2vw;
+}
+
+.transfer-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    padding-left: 2vw;
+    padding-right: 2vw;
+    padding-top: 1vw;
+    padding-bottom: 2vw;
+}
+
+.transfer-container * {
+    margin-top: 1vh;
+}
+
+.balance-container {
+    background-color: #d7d7d7;
+    padding: 1.5vh;
+    border-radius: 5px;
+    font-size: 1.6vh;
+}
+
+form {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    flex-direction: column;
+}
+
+form input {
+    display: block;
+    margin-bottom: 0px;
+
+    font-size: 1.5vh;
+    text-align: center;
+
+    border-radius: 5px;
+
+    width: 10vw;
+}
+
+form select,label {
+    font-size: 1.5vh;
+}
+
+form label {
+    font-weight: bold;
+}
+
+.transfer-submit-button {
+    background-color: #008000;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1vh;
+
+    width: 8vw;
+}
+
+.transfer-submit-button:hover {
+    background-color: #006400;
+}
