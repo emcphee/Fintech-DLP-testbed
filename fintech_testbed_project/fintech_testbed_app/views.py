@@ -16,6 +16,20 @@ from django.urls import reverse
 from datetime import datetime
 
 BYPASS_2FA_DEBUG = True
+def transfer(request):
+    page_args = {
+        'is_logged_in': ('username' in request.session)
+    }
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    if page_args['is_logged_in']:
+        page_args['username'] = request.session['username']
+        db_connection.close()
+        return render(request, "transfer.html", page_args)
+    else:
+        db_connection.close()
+        return render(request, "home.html")
 
 def cashier(request):
     local_variables = locals()
