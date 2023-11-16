@@ -11,5 +11,6 @@ urlpatterns = [
     path('contactus/', views.contactus),
     path('register/', views.register, name='register'),
     path('account/', views.account, name='account'),
-    path('cashier/', views.cashier, name='cashier')
+    path('cashier/', views.cashier, name='cashier'),
+    path('transfer/', views.transfer, name='transfer'),
 ]
