@@ -17,16 +17,17 @@
             Balance:&nbsp;<span>${{balance}}</span>
         </div>
 
-        <form class="recipient-form">
-                <label for="accountType">Send to:</label>
-                <select id="accountType" name="accountType" required>
-                    <option value="personal">Personal Account</option>
-                    <option value="business">Business Account</option>
-                </select>
-                <input type="text" id="recipient" name="recipient" placeholder="Enter recipient username">
-                <input type="text" id="transfer-amount" name="transfer-amount" placeholder="Enter transfer amount">
-                <input type="text" id="description" name="description" placeholder="Enter description here">
-                <button class="transfer-submit-button" type="submit">Transfer</button>
+        <form class="recipient-form", method="post">
+            {% csrf_token %}
+            <label for="accountType">Send to:</label>
+            <select id="accountType" name="accountType" required>
+                <option value="personal">Personal Account</option>
+                <option value="business">Business Account</option>
+            </select>
+            <input type="text" id="recipient" name="recipient" placeholder="Enter recipient username">
+            <input type="text" id="transfer-amount" name="transfer-amount" placeholder="Enter transfer amount">
+            <input type="text" id="description" name="description" placeholder="Enter description here">
+            <button class="transfer-submit-button" type="submit" name="form_type" value="transfer-user">Transfer</button>
         </form>
     </div>
 </div>
