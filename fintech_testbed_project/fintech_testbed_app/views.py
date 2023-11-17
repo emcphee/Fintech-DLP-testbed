@@ -20,16 +20,89 @@ def transfer(request):
     page_args = {
         'is_logged_in': ('username' in request.session)
     }
+    
+    def get_user(username):
+        # get the user
+        sql_query = "SELECT username, balance, id FROM fintech_testbed_app_client WHERE username = %s"
+        params = (username,)
+        cursor.execute(sql_query, params)
+        result = cursor.fetchall()
+        if result:
+            result = result[0]
+            return result
+        else:
+            return None
+
+    def string_to_float(value):
+        try:
+            integer_value = float(value)
+            return integer_value
+        except ValueError:
+            return None
+
+    def make_transaction(sender, reciever, value):
+        db_connection = connections['default']
+        cursor = db_connection.cursor()
+        print("transaction id: ")
+        print(user_id)
+        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
+        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now()), "cashier check")
+        cursor.execute(new_transactions_query, params)
+    
+    def update_balance(username, balance):
+        db_connection = connections['default']
+        cursor = db_connection.cursor()
+        query = "UPDATE fintech_testbed_app_client SET balance = balance + %s WHERE username = %s"
+
+        # Execute the update query
+        cursor.execute(query, (balance, username))
+
+    if not page_args['is_logged_in']:
+        return render(request, "home.html")
+
+    # initialize the database connection
     db_connection = connections['default']
     cursor = db_connection.cursor()
+    
+    # get the user
+    result = get_user(request.session['username'])
+    username = result[0]
+    balance = result[1]
+    user_id = str(result[2])
+    page_args["balance"] = balance
 
-    if page_args['is_logged_in']:
-        page_args['username'] = request.session['username']
-        db_connection.close()
-        return render(request, "transfer.html", page_args)
-    else:
-        db_connection.close()
-        return render(request, "home.html")
+    # check if a button is clicked
+    if request.method == 'POST':
+        # check where the button was pressed
+        form_type = request.POST.get('form_type', '')
+
+        if form_type == 'transfer-user':    
+            recipient = request.POST['recipient']
+            transfer_amount = string_to_float(request.POST['transfer-amount'])
+            description = request.POST['description']
+            
+            # get recipient
+            recipient = get_user(recipient)
+
+            # check if recipient exists
+            if recipient:
+                recipient_user = recipient[0]
+                recipient_id = str(result[2])
+
+                if transfer_amount and transfer_amount <= balance:
+                    make_transaction(username, recipient_user, transfer_amount)
+                    update_balance(username, -1 * transfer_amount)
+                    update_balance(recipient_user, transfer_amount)
+                    result = get_user(request.session['username'])
+                    page_args["balance"] = result[1]
+                else:
+                    print("Error")
+            else:
+                print("Error")
+    
+    db_connection.commit()
+    db_connection.close()
+    return render(request, "transfer.html", page_args)
 
 def cashier(request):
     local_variables = locals()
@@ -58,13 +131,13 @@ def cashier(request):
         except ValueError:
             return None
 
-    def make_transaction(user_id, value):
+    def make_transaction(sender, reciever, value):
         db_connection = connections['default']
         cursor = db_connection.cursor()
         print("transaction id: ")
         print(user_id)
-        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender_id, reciever_id, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
-        params = (uuid.uuid4(), user_id, user_id, value, str(datetime.now()), "cashier check")
+        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
+        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now()), "cashier check")
         cursor.execute(new_transactions_query, params)
     
     def update_balance(username, balance):
@@ -93,12 +166,12 @@ def cashier(request):
             if result:
                 username = result[0]
                 balance = result[1]
+                print(balance)
                 user_id = str(result[2])
-                print("User id: ")
-                print(user_id)
 
                 request.session['cashier_username'] = username
                 request.session['cashier_balance'] = balance
+                print(request.session['cashier_balance'])
                 request.session['cashier_id'] = user_id
             else:
 
@@ -119,7 +192,7 @@ def cashier(request):
                 # make deposit
                 print(deposit)
                 # make transaction
-                make_transaction(user_id, deposit)
+                make_transaction(username, username, deposit)
                 # make update balance
                 update_balance(username, deposit)
                 
@@ -140,7 +213,7 @@ def cashier(request):
                     # make withdraw
                     print(withdraw)
                     # make transaction
-                    make_transaction(user_id, withdraw*-1)
+                    make_transaction(username, username, withdraw)
                     # make update balance
                     update_balance(username, withdraw*-1)
         
@@ -349,8 +422,6 @@ def contactus(request):
     return render(request, "contactus.html", page_args)
 
 def register(request):
-    db_connection = connections['default']
-    cursor = db_connection.cursor()
     error_message = None  # Initialize error message to None
 
     if request.method == 'POST':
@@ -367,17 +438,26 @@ def register(request):
         elif not email or Client.objects.filter(username=username).exists():
             error_message = "Email or username already exists."
         else:
-            salt = bcrypt.gensalt()
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+            # Check if the passwords match
+            if password == password_confirm and email and not Client.objects.filter(username=username).exists():
+                salt = bcrypt.gensalt()
+                hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+                
+                db_connection = connections['default']
+                cursor = db_connection.cursor()
 
-            # Create a new client
-            new_item = Client(username=username, email=email, salt=salt.decode('utf-8'), hashed_password=hashed_password.decode('utf-8'))
-            new_item.save()
-            new_account = BankAccount(client_id=new_item, savings=0)
-            new_account.save()
+                # Create a new client
+                new_item_query = "INSERT INTO fintech_testbed_app_client (id, username, email, salt, hashed_password, balance, is_business) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                params = (uuid.uuid4(), username, email, salt.decode('utf-8'), hashed_password.decode('utf-8'), 0, False)
+                cursor.execute(new_item_query, params)
+                db_connection.commit()
+                db_connection.close()
 
-            # Redirect to a success page or home page
-            return home(request)
+                # Redirect to a success page or home page
+                return home(request)
+            else:
+                # Passwords don't match, set error message
+                error_message = "Confirmed password must match the password."
 
     page_args = {
         "error_message": error_message,
@@ -408,13 +488,13 @@ def account(request):
 
         # get transactions from user account
         sql_query = """
-            SELECT t.datetime, t.description, t.sender_id, t.reciever_id, t.balance
+            SELECT t.datetime, t.description, t.sender, t.reciever, t.balance
             FROM fintech_testbed_app_transactions AS t
-            JOIN fintech_testbed_app_client AS u ON t.sender_id = u.id OR t.reciever_id = u.id
-            WHERE u.id = %s;
+            JOIN fintech_testbed_app_client AS u ON t.sender = u.username OR t.reciever = u.username
+            WHERE u.username = %s;
         """
 
-        params = (user_id,)
+        params = (page_args['username'],)
         cursor.execute(sql_query, params)
         result = cursor.fetchall()
         transactions = result[:10]
