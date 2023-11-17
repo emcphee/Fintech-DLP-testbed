@@ -78,7 +78,8 @@ class Client(models.Model):
     
     username = models.CharField(
         max_length=100, 
-        help_text='Enter a client username'
+        help_text='Enter a client username',
+        unique=True
     )
 
     email = models.CharField(
@@ -120,6 +121,8 @@ class Transactions(models.Model):
         on_delete=models.CASCADE,
         related_name='sent_transactions', 
         default=None,
+        to_field='username',
+        db_column='sender',
         help_text = 'The ID of the client'
     )
 
@@ -129,6 +132,8 @@ class Transactions(models.Model):
         on_delete=models.CASCADE,
         related_name='received_transactions',
         default=None,
+        to_field='username',
+        db_column='reciever',
         help_text = 'The ID of the client'
     )
 
