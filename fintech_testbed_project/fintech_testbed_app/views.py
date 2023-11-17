@@ -351,32 +351,33 @@ def contactus(request):
 def register(request):
     db_connection = connections['default']
     cursor = db_connection.cursor()
-
     error_message = None  # Initialize error message to None
+
     if request.method == 'POST':
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
         password_confirm = request.POST['password_confirm']
 
-        
-        # Check if the passwords match
-        if password == password_confirm and email and not Client.objects.filter(username=username).exists():
+        # Check for password strength
+        if not is_strong_password(password):
+            error_message = "Password is not strong enough."
+        elif password != password_confirm:
+            error_message = "Confirmed password must match the password."
+        elif not email or Client.objects.filter(username=username).exists():
+            error_message = "Email or username already exists."
+        else:
             salt = bcrypt.gensalt()
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
-            
+
             # Create a new client
-            new_item_query = "INSERT INTO fintech_testbed_app_client (id, username, email, salt, hashed_password, balance, is_business) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-            params = (uuid.uuid4(), username, email, salt.decode('utf-8'), hashed_password.decode('utf-8'), 0, False)
-            cursor.execute(new_item_query, params)
-            db_connection.commit()
-            db_connection.close()
+            new_item = Client(username=username, email=email, salt=salt.decode('utf-8'), hashed_password=hashed_password.decode('utf-8'))
+            new_item.save()
+            new_account = BankAccount(client_id=new_item, savings=0)
+            new_account.save()
 
             # Redirect to a success page or home page
             return home(request)
-        else:
-            # Passwords don't match, set error message
-            error_message = "Confirmed password must match the password."
 
     page_args = {
         "error_message": error_message,
