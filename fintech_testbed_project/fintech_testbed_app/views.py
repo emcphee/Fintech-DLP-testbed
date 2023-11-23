@@ -426,10 +426,16 @@ def contactus(request):
     return render(request, "contactus.html", page_args)
 
 def register(request):
-    error_message = None  # Initialize error message to None
-
+    error_message = None  # Initialize values to None or empty string
+    username = ''
+    firstname = ''
+    lastname = ''
+    email = ''
+    
     if request.method == 'POST':
         username = request.POST['username']
+        firstname = request.POST['first-name']
+        lastname = request.POST['last-name']
         email = request.POST['email']
         password = request.POST['password']
         password_confirm = request.POST['password_confirm']
@@ -465,7 +471,11 @@ def register(request):
 
     page_args = {
         "error_message": error_message,
-        'is_logged_in': ('username' in request.session)
+        'is_logged_in': ('username' in request.session),
+        'username_sendback': username,
+        'firstname_sendback': firstname,
+        'lastname_sendback': lastname,
+        'email_sendback': email
     }
     return render(request, "register.html", page_args)
 
