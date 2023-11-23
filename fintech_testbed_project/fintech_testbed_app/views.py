@@ -322,9 +322,9 @@ def login(request):
                 except Exception as e:
                     print("OTP Send Error:", e)
             else:
-                error_message = "Invalid Password"
+                error_message = "Invalid Login"
         else:
-            error_message = "Invalid Username"
+            error_message = "Invalid Login"
         return {
                     "valid_credentials": valid_credentials, 
                     "error_message": error_message
