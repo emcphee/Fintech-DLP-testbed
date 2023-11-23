@@ -325,6 +325,7 @@ def login(request):
                 error_message = "Invalid Login"
         else:
             error_message = "Invalid Login"
+        
         return {
                     "valid_credentials": valid_credentials, 
                     "error_message": error_message
@@ -341,7 +342,8 @@ def login(request):
             page_args = {
                 'is_logged_in': ('username' in request.session),
                 'error_message' : error_message,
-                'valid_credentials' : valid_credentials
+                'valid_credentials' : valid_credentials,
+                'username_sendback' : username
             }
             request.session['login_query_processed'] = True
             return render(request, "login.html", page_args)
@@ -361,7 +363,8 @@ def login(request):
             page_args = {
                 'is_logged_in': ('username' in request.session),
                 'error_message' : error_message,
-                'valid_credentials' : valid_credentials
+                'valid_credentials' : valid_credentials,
+                'username_sendback' : username
             }
             return render(request, "login.html", page_args)
         elif form_type == 'enter-OTP': # initialize 2FA code check
@@ -391,7 +394,8 @@ def login(request):
     page_args = {
         'is_logged_in': ('username' in request.session),
         'error_message' : error_message,
-        'valid_credentials' : valid_credentials
+        'valid_credentials' : valid_credentials,
+        'username_sendback' : ''
     }
 
     username = None
