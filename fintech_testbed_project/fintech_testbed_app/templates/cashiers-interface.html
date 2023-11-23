@@ -46,6 +46,11 @@
                 </div>
             </form>
         </div>
+        <div class="manager-pin">
+            <p>Manager Pin</p>
+            {% csrf_token %}
+            <input type="password" id="manager-pin" name="manager-pin" placeholder="******">
+        </div>
         <div class="withdraw-form-container">
             <h1>Withdraw</h1>
             <form method="post">

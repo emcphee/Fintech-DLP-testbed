@@ -1,5 +1,3 @@
-
-
 main {
     position: relative;
 }
@@ -10,8 +8,8 @@ main {
     transform: translateX(-50%);
     margin-top: 50px;
 
-    width: 50%;
-    height: 70%;
+    width: 60%;
+    height: 90%;
 
     background-color: rgb(244, 244, 244);
     border-radius: 15px;
@@ -52,16 +50,22 @@ main {
 }
 
 .cashier-entry-header-container p {
-    font-size: 1.8vw;
+    font-size: calc(0.8vw + 0.8vh)
 }
 
 .deposit-withdraw-containers {
     width: 100%;
     height: 100%;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+
 }
 
 .deposit-withdraw-containers * {
-    width: 40%;
+    width: 50%;
     height: 50%;
     background-color: #d4d4d4;
 
@@ -86,7 +90,7 @@ main {
     
     font-weight: normal;
 
-    font-size: 1.7vw;
+    font-size: calc(0.8vw + 0.8vh)
 }
 
 
@@ -118,15 +122,18 @@ main {
     display: flex;
     flex-direction: row;
 
-    padding: 20px;
+    padding: 0.1vh 0.1vw 0.1vh 0.1vw
 }
 
 .username-form-container form label,input {
     display: block;
     margin-bottom: 0px;
 
-    font-size: 1.5vh;
+    font-size: calc(0.75vw + 0.75vh);
     text-align: center;
+
+    height: 3vh;
+    width: 12vw;
 }
 
 .button-container {
@@ -136,11 +143,12 @@ main {
 .username-submit-button {
     background-color: #008000;
     color: #fff;
-    padding: 10px 20px;
+    padding: 1vh 1vw 1vh 1vw;
+    margin-right: 1vw;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 1vh;
+    font-size: calc(0.5vw + 0.5vh)
 }
 
 .username-submit-button:hover {
@@ -149,13 +157,54 @@ main {
 
 .user-info-container {
     background-color: #f0f0f0;
-    padding: 1.5vh;
+    padding: calc(0.8vw + 0.8vh);
     border-radius: 5px;
-    font-size: 1.6vh;
+    font-size: calc(0.8vw + 0.8vh);
+
+    min-width: fit-content;
+    min-height: fit-content;
+    max-width: 100%;
+    max-height: 100%;
+
+    word-wrap: break-word;
 }
 
 .user-info-container span {
-    font-size: 1.6vh;
+    font-size: calc(0.8vw + 0.8vh);
+}
+
+.manager-pin {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    flex-direction: column;  
+
+    background-color: #d4d4d4;
+    padding: 1.6vh 1.6vw 1.6vh 1.6vw;
+    border-radius: 5px;
+    font-size: calc(0.8vw + 0.8vh);
+
+    width: 10%;
+    height: 10%;
+
+    margin: 5vh 0 0 0;
+}
+
+.manager-pin p {
+    text-align: center;
+    margin: 4px;
+}
+
+.manager-pin input {
+    display: block;
+    margin-bottom: 0px;
+
+    font-size: calc(0.8vw + 0.8vh);
+    text-align: center;
+
+    background-color: #fff;
+    height: 50%;
+    width: 93%;
 }
 
 
@@ -173,7 +222,7 @@ main {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 1vh;
+    font-size: calc(0.5vw + 0.5vh);
 
     width: 100%;
 }
