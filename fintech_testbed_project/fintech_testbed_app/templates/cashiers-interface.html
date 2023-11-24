@@ -4,6 +4,14 @@
     <title>Cashier - Big Bank</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'cashiers-interface.css' %}">
+
+    <script>
+        function submitForm(formId) {
+            var form = document.getElementById(formId);
+            form.appendChild(document.getElementById('manager-pin'));
+            form.submit();
+        }
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -37,12 +45,13 @@
     <div class="deposit-withdraw-containers">
         <div class="deposit-form-container">
             <h1>Deposit</h1>
-            <form method="post">
+            <form method="post" id="depositform">
                 {% csrf_token %}
                 <input type="text" id="deposit-amount" name="deposit-amount" placeholder="Deposit Amount">
+                <input type="hidden" name="form_type" value="make-deposit">
 
                 <div class="transaction-button-container">
-                    <button class="transaction-button" type="submit" name="form_type" value="make-deposit">Make Deposit</button>
+                    <button class="transaction-button" type="button" onclick="submitForm('depositform')">Make Deposit</button>
                 </div>
             </form>
         </div>
@@ -53,12 +62,13 @@
         </div>
         <div class="withdraw-form-container">
             <h1>Withdraw</h1>
-            <form method="post">
+            <form method="post" id="withdrawform">
                 {% csrf_token %}
-                <input type="text" id="deposit-amount" name="withdraw-amount" placeholder="Withdrawal Amount">
+                <input type="text" id="withdraw-amount" name="withdraw-amount" placeholder="Withdrawal Amount">
+                <input type="hidden" name="form_type" value="make-withdrawal">
 
                 <div class="transaction-button-container">
-                    <button class="transaction-button" type="submit" name="form_type" value="make-withdrawal">Make Withdrawal</button>
+                    <button class="transaction-button" type="button" onclick="submitForm('withdrawform')">Make Withdrawal</button>
                 </div>
             </form>
         </div>

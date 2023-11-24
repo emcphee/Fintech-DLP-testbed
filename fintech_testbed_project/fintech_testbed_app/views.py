@@ -16,6 +16,7 @@ from django.urls import reverse
 from datetime import datetime
 
 BYPASS_2FA_DEBUG = True
+HARDCODED_MANAGER_PIN = '0423'
 def transfer(request):
     page_args = {
         'is_logged_in': ('username' in request.session)
@@ -156,7 +157,6 @@ def cashier(request):
     if request.method == 'POST':
         # check where the button was pressed
         form_type = request.POST.get('form_type', '')
-
         if form_type == 'checkout-user':    # select user
             username = request.POST['username']
 
@@ -189,12 +189,18 @@ def cashier(request):
                 balance = string_to_float(request.session['cashier_balance'])
                 user_id = request.session.get('cashier_id')
 
-                # make deposit
-                print(deposit)
-                # make transaction
-                make_transaction(username, username, deposit)
-                # make update balance
-                update_balance(username, deposit)
+                if deposit >= 5000:
+                    manager_pin = request.POST.get('manager-pin')
+                    if manager_pin == HARDCODED_MANAGER_PIN:
+                        # make transaction
+                        make_transaction(username, username, deposit)
+                        # make update balance
+                        update_balance(username, deposit)
+                else:
+                    # make transaction
+                    make_transaction(username, username, deposit)
+                    # make update balance
+                    update_balance(username, deposit)
                 
         elif form_type == 'make-withdrawal':    # make withdrawal
             withdraw = request.POST['withdraw-amount']
@@ -204,18 +210,24 @@ def cashier(request):
             if withdraw:
                 username = request.session.get('cashier_username')
                 balance = string_to_float(request.session.get('cashier_balance'))
+                
                 user_id = request.session.get('cashier_id')
-                print(withdraw)
-                print(balance)
 
                 # check balance and withdraw if amount is valid
                 if withdraw <= balance:
-                    # make withdraw
-                    print(withdraw)
-                    # make transaction
-                    make_transaction(username, username, withdraw)
-                    # make update balance
-                    update_balance(username, withdraw*-1)
+                    # If withdrawal >=$5000, then require manager pin:
+                    if withdraw >= 5000:
+                        manager_pin = request.POST.get('manager-pin')
+                        if manager_pin == HARDCODED_MANAGER_PIN:
+                            # make transaction
+                            make_transaction(username, username, withdraw)
+                            # make update balance
+                            update_balance(username, withdraw*-1)
+                    else:
+                        # make transaction
+                        make_transaction(username, username, withdraw)
+                        # make update balance
+                        update_balance(username, withdraw*-1)
         
         # update username details
         if "cashier_username" in request.session:
