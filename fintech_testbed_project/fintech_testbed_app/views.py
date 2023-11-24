@@ -153,6 +153,8 @@ def cashier(request):
     db_connection = connections['default']
     cursor = db_connection.cursor()
 
+    error_message = ''
+
     # check if a button is clicked
     if request.method == 'POST':
         # check where the button was pressed
@@ -178,7 +180,10 @@ def cashier(request):
                 if "cashier_username" in request.session:
                     del request.session['cashier_username']
                     del request.session['cashier_balance']
-                    del request.session['cashier_id'] 
+                    del request.session['cashier_id']
+
+                    error_message = "User not found."
+                    page_args['error_message'] = error_message
 
         elif form_type == 'make-deposit':   # make deposit
             deposit = request.POST['deposit-amount']
@@ -196,11 +201,15 @@ def cashier(request):
                         make_transaction(username, username, deposit)
                         # make update balance
                         update_balance(username, deposit)
+                    else:
+                        error_message = 'Invalid manager pin. Deposit is over $5000'
                 else:
                     # make transaction
                     make_transaction(username, username, deposit)
                     # make update balance
                     update_balance(username, deposit)
+            else:
+                error_message = 'Invalid deposit amount.'
                 
         elif form_type == 'make-withdrawal':    # make withdrawal
             withdraw = request.POST['withdraw-amount']
@@ -223,11 +232,17 @@ def cashier(request):
                             make_transaction(username, username, withdraw)
                             # make update balance
                             update_balance(username, withdraw*-1)
+                        else:
+                            error_message = 'Invalid manager pin. Withdrawal is over $5000'
                     else:
                         # make transaction
                         make_transaction(username, username, withdraw)
                         # make update balance
                         update_balance(username, withdraw*-1)
+                else:
+                    error_message = 'Invalid withdrawal. Amount is higher than balance.'
+            else:
+                error_message = 'Invalid withdrawal amount.'
         
         # update username details
         if "cashier_username" in request.session:
@@ -243,7 +258,8 @@ def cashier(request):
             page_args = {
                 'is_logged_in': ('username' in request.session),
                 "username": username,
-                "balance": balance
+                "balance": balance,
+                "error_message": error_message
             }
 
     return render(request, "cashiers-interface.html", page_args)

@@ -8,7 +8,12 @@
     <script>
         function submitForm(formId) {
             var form = document.getElementById(formId);
-            form.appendChild(document.getElementById('manager-pin'));
+
+            var managerPinInput = document.getElementById('manager-pin');
+            var managerPinClone = managerPinInput.cloneNode(true);
+            managerPinClone.style.display = "none";
+            
+            form.appendChild(managerPinClone);
             form.submit();
         }
     </script>
@@ -20,6 +25,8 @@
     <div class="cashier-entry-header-container">
         <p>Cashier's Interface</p>
     </div>
+
+    <p class="error-message">{{ error_message }}</p>
 
     <div class="username-entry-container-container">
         <div class="username-entry-container">
