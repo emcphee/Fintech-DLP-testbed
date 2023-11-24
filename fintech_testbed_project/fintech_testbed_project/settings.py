@@ -79,7 +79,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'db', 
         'USER': 'postgres',
-        'PASSWORD': '0327',
+        'PASSWORD': 'postgres',
         'HOST': '127.0.0.1', 
         'PORT': '5432',
     }
@@ -129,3 +129,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
 SENDGRID_API_KEY = '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'
+
+CSRF_TRUSTED_ORIGINS = ['https://big-bank.me']
