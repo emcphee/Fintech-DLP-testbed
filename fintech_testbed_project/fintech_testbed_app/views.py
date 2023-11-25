@@ -24,10 +24,14 @@ def transfer(request):
     
     def get_user(username):
         # get the user
+        db_connection = connections['default']
+        cursor = db_connection.cursor()
         sql_query = "SELECT username, balance, id FROM fintech_testbed_app_client WHERE username = %s"
         params = (username,)
         cursor.execute(sql_query, params)
         result = cursor.fetchall()
+        db_connection.commit()
+        db_connection.close()
         if result:
             result = result[0]
             return result
@@ -44,11 +48,22 @@ def transfer(request):
     def make_transaction(sender, reciever, value):
         db_connection = connections['default']
         cursor = db_connection.cursor()
-        print("transaction id: ")
-        print(user_id)
-        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
-        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now()), "cashier check")
-        cursor.execute(new_transactions_query, params)
+
+        try:
+            # Begin the transaction
+            db_connection.autocommit = False
+            print("transaction id: ")
+            print(user_id)
+            new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
+            params = (uuid.uuid4(), sender, reciever, value, str(datetime.now()), "cashier check")
+            cursor.execute(new_transactions_query, params)
+
+            db_connection.commit()
+        except psycopg2.Error as e:
+            # Rollback the transaction
+            db_connection.rollback()
+        finally:
+            db_connection.close()
     
     def update_balance(username, balance):
         db_connection = connections['default']
@@ -57,13 +72,11 @@ def transfer(request):
 
         # Execute the update query
         cursor.execute(query, (balance, username))
+        db_connection.commit()
+        db_connection.close()
 
     if not page_args['is_logged_in']:
         return render(request, "home.html")
-
-    # initialize the database connection
-    db_connection = connections['default']
-    cursor = db_connection.cursor()
     
     # get the user
     result = get_user(request.session['username'])
@@ -101,8 +114,6 @@ def transfer(request):
             else:
                 print("Error")
     
-    db_connection.commit()
-    db_connection.close()
     return render(request, "transfer.html", page_args)
 
 def cashier(request):
@@ -115,10 +126,14 @@ def cashier(request):
 
     def get_user(username):
         # get the user
+        db_connection = connections['default']
+        cursor = db_connection.cursor()
         sql_query = "SELECT username, balance, id FROM fintech_testbed_app_client WHERE username = %s"
         params = (username,)
         cursor.execute(sql_query, params)
         result = cursor.fetchall()
+        db_connection.commit()
+        db_connection.close()
         if result:
             result = result[0]
             return result
@@ -135,11 +150,22 @@ def cashier(request):
     def make_transaction(sender, reciever, value):
         db_connection = connections['default']
         cursor = db_connection.cursor()
-        print("transaction id: ")
-        print(user_id)
-        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
-        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now()), "cashier check")
-        cursor.execute(new_transactions_query, params)
+
+        try:
+            # Begin the transaction
+            db_connection.autocommit = False
+            print("transaction id: ")
+            print(user_id)
+            new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
+            params = (uuid.uuid4(), sender, reciever, value, str(datetime.now()), "cashier check")
+            cursor.execute(new_transactions_query, params)
+
+            db_connection.commit()
+        except psycopg2.Error as e:
+            # Rollback the transaction
+            db_connection.rollback()
+        finally:
+            db_connection.close()
     
     def update_balance(username, balance):
         db_connection = connections['default']
@@ -148,10 +174,9 @@ def cashier(request):
 
         # Execute the update query
         cursor.execute(query, (balance, username))
+        db_connection.commit()
+        db_connection.close()
 
-    # initialize the database connection
-    db_connection = connections['default']
-    cursor = db_connection.cursor()
 
     error_message = ''
 
