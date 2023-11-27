@@ -23,15 +23,39 @@
                 <span class="receiver">Receiver</span>
                 <span class="balance">Balance</span>
             </div>
+            
             {% for transaction in transactions %}
-            <div class="transaction-{{ forloop.counter0|divisibleby:2|yesno:'light,dark' }}" id="{{ forloop.counter }}">
-                <span class="date">{{ transaction.0 }}</span>
-                <span class="description">{{ transaction.1 }}</span>
-                <span class="sender">{{ transaction.2 }}</span>
-                <span class="receiver">{{ transaction.3 }}</span>
-                <span class="balance">{{ transaction.4 }}</span>
-            </div>
+            <form action="/account/" method="POST" class="transaction-{{ forloop.counter0|divisibleby:2|yesno:'light,dark' }} clickable-transaction" id="{{ forloop.counter }}">
+                    {% csrf_token %}
+                    <span class="date">{{ transaction.0 }}</span>
+                    <span class="description">{{ transaction.1 }}</span>
+                    <span class="sender">{{ transaction.2 }}</span>
+                    <span class="receiver">{{ transaction.3 }}</span>
+                    <span class="balance">{{ transaction.4 }}</span>
+                    <input type="hidden" name="date" value="{{ transaction.0 }}">
+                    <input type="hidden" name="description" value="{{ transaction.1 }}">
+                    <input type="hidden" name="sender" value="{{ transaction.2 }}">
+                    <input type="hidden" name="receiver" value="{{ transaction.3 }}">
+                    <input type="hidden" name="balance" value="{{ transaction.4 }}">
+                    <input type="hidden" name="transaction_id" value="{{ transaction.5 }}">
+            </form>
             {% endfor %}
+
+            <script>
+                const transactionDivs = document.querySelectorAll('.clickable-transaction');
+
+                transactionDivs.forEach(div => {
+                    div.addEventListener('click', function() {
+                        const formClassPrefix = this.classList[1];
+                        const form = this.closest(`.${formClassPrefix}`);
+
+                        if (form) {
+                            form.submit();
+                        }
+                    });
+                });
+            </script>
+
         </div>
         {% if account_page_num > 0 %}
         <form class="last-page-form" method="post">
@@ -48,7 +72,24 @@
         <p><span id="page">{{account_page_num}}</span></p>
     </div>
     <div class="balance-container">
-        Balance:&nbsp;<span id="balance-value">{{balance}}</div>
+        Balance:&nbsp;<span id="balance-value">{{balance}}
     </div>
+
+    {% if selected_transaction %}
+    <div class="transaction-container">
+        
+        <span>{{transaction_date}}
+        <span>{{transaction_sender}} to {{transaction_receiver}}
+        <span>${{transaction_balance}}
+        <form class="login-form" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Enter Flag Description</label>
+                <textarea rows="6" cols="25" id="description" name="description" placeholder="Enter your description here..."></textarea>
+            </div>
+            <button type="submit" name="form_type" value="flag-transaction">Submit Concern</button>
+        </form>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
