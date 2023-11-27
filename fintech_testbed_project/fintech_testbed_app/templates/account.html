@@ -23,42 +23,32 @@
                 <span class="receiver">Receiver</span>
                 <span class="balance">Balance</span>
             </div>
-            <div class="transaction-dark" id="0">
-                {{transaction0|safe}}
+            {% for transaction in transactions %}
+            <div class="transaction-{{ forloop.counter0|divisibleby:2|yesno:'light,dark' }}" id="{{ forloop.counter }}">
+                <span class="date">{{ transaction.0 }}</span>
+                <span class="description">{{ transaction.1 }}</span>
+                <span class="sender">{{ transaction.2 }}</span>
+                <span class="receiver">{{ transaction.3 }}</span>
+                <span class="balance">{{ transaction.4 }}</span>
             </div>
-            <div class="transaction-light" id="1">
-                {{transaction1|safe}}
-            </div>
-            <div class="transaction-dark" id="2">
-                {{transaction2|safe}}
-            </div>
-            <div class="transaction-light" id="3">
-                {{transaction3|safe}}
-            </div>
-            <div class="transaction-dark" id="4">
-                {{transaction4|safe}}
-            </div>
-            <div class="transaction-light" id="5">
-                {{transaction5|safe}}
-            </div>
-            <div class="transaction-dark" id="6">
-                {{transaction6|safe}}
-            </div>
-            <div class="transaction-light" id="7">
-                {{transaction7|safe}}
-            </div>
-            <div class="transaction-dark" id="8">
-                {{transaction8|safe}}
-            </div>
-            <div class="transaction-light" id="9">
-                {{transaction9|safe}}
-            </div>
+            {% endfor %}
         </div>
+        {% if account_page_num > 0 %}
+        <form class="last-page-form" method="post">
+            {% csrf_token %}
+            <button id="last-page" type="submit" name="form_type" value="last-page">Last Page</button>
+        </form>
+        {% endif %}
+        {% if page_element_max > page_element_size %}
+        <form class="next-page-form" method="post">
+            {% csrf_token %}
+            <button id="next-page" type="submit" name="form_type" value="next-page">Next Page</button>
+        </form>
+        {% endif %}
+        <p><span id="page">{{account_page_num}}</span></p>
     </div>
     <div class="balance-container">
         Balance:&nbsp;<span id="balance-value">{{balance}}</div>
     </div>
-    
 </div>
-
 {% endblock %}
