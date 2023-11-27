@@ -15,6 +15,7 @@ from urllib.parse import urlencode
 from django.urls import reverse
 from datetime import datetime
 from fintech_testbed_app import views_helpers as helper
+import json
 
 BYPASS_2FA_DEBUG = True
 HARDCODED_MANAGER_PIN = '0423'
@@ -431,7 +432,9 @@ def account(request):
     # set page #
     if 'account_page_num' not in request.session:
         request.session['account_page_num'] = 0 
-   
+
+    
+    print(page_args)
      # check if a button is clicked
     if request.method == 'POST':
         # check where the button was pressed
@@ -442,11 +445,42 @@ def account(request):
             request.session['account_page_num'] += 1
         elif form_type == 'last-page':
             request.session['account_page_num'] -= 1
+        elif form_type == 'flag-transaction':
+            description = request.POST["description"]
+            transaction_id = request.session["selected_transaction"]
 
-    page_args['account_page_num'] = request.session['account_page_num']
-    print(page_args['account_page_num'])
+            db_connection = connections['default']
+            cursor = db_connection.cursor()
+
+            # get the transaction
+            sql_query = "SELECT id FROM fintech_testbed_app_transactions WHERE id = %s"
+            params = (transaction_id,)
+            cursor.execute(sql_query, params)
+            result = cursor.fetchall()
+            print(result)
+            result = result[0]
+            transaction_id = result[0]
+            new_transactions_query = "INSERT INTO fintech_testbed_app_flagged_transactions (id, description, transactions_id) VALUES (%s, %s, %s)"
+            params = (uuid.uuid4(), description, transaction_id)
+            cursor.execute(new_transactions_query, params)
+            
+            db_connection.commit()
+            db_connection.close()
+
+
+            del request.session["selected_transaction"]
+        else:
+            page_args["selected_transaction"] = request.POST['transaction_id']
+            page_args["transaction_date"] = request.POST["date"]
+            page_args["transaction_sender"] = request.POST["sender"]
+            page_args["transaction_receiver"] = request.POST["receiver"]
+            page_args["transaction_balance"] = request.POST["balance"]
+            request.session["selected_transaction"] = request.POST['transaction_id']
+
+    page_args['account_page_num'] = request.session['account_page_num']  
 
     if page_args['is_logged_in']:
+        
         # Populate username
         page_args['username'] = request.session['username']
         
@@ -464,7 +498,7 @@ def account(request):
 
         # get transactions from user account
         sql_query = """
-            SELECT t.datetime, t.description, t.sender, t.reciever, t.balance
+            SELECT t.datetime, t.description, t.sender, t.reciever, t.balance, t.id
             FROM fintech_testbed_app_transactions AS t
             JOIN fintech_testbed_app_client AS u ON t.sender = u.username OR t.reciever = u.username
             WHERE u.username = %s
@@ -477,7 +511,6 @@ def account(request):
         db_connection.commit()
         db_connection.close()
 
-        print(len(result))
         page = request.session['account_page_num']
         page_args['transactions'] = result[page*11:(page+1)*11]
         page_args['page_element_size'] = (page+1) * 11
