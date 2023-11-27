@@ -20,6 +20,19 @@
     align-items: center;
 }
 
+.transaction-container {
+    width: 16vw;
+    height: 50vh;
+    background-color: rgb(199, 199, 199);
+    border-radius: 10px;
+    font-size: 2vw;
+    margin-left: 3vw;
+    margin-top: 3vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .account-name-container {
     position: relative;
     width: 100%;
@@ -97,6 +110,13 @@
     width: 13%;
 }
 
+.clickable-transaction {
+    cursor: pointer;
+}
+
+.clickable-transaction:hover {
+    background-color: #e0e0e0; /* Change the background color as desired */
+}
 
 main {
     position: relative;
