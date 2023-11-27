@@ -145,3 +145,23 @@ class Transactions(models.Model):
         """String for representing the Model object."""
         return f'{self.id}'
 
+class Flagged_Transactions(models.Model):
+    id = models.UUIDField(
+        primary_key=True, 
+        default=uuid.uuid4,
+        help_text = 'Unique ID for the transactions'
+    )
+
+    Transactions_ID = models.ForeignKey(
+        Transactions,
+        on_delete=models.CASCADE,
+        default=None,
+        db_column='transactions_id',
+        help_text = 'The ID of the transaction'
+    )
+
+    description = models.CharField(max_length=5000)
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
