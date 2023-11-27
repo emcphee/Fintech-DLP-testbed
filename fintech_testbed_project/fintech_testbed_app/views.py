@@ -452,21 +452,29 @@ def account(request):
             db_connection = connections['default']
             cursor = db_connection.cursor()
 
-            # get the transaction
-            sql_query = "SELECT id FROM fintech_testbed_app_transactions WHERE id = %s"
-            params = (transaction_id,)
-            cursor.execute(sql_query, params)
-            result = cursor.fetchall()
-            print(result)
-            result = result[0]
-            transaction_id = result[0]
-            new_transactions_query = "INSERT INTO fintech_testbed_app_flagged_transactions (id, description, transactions_id) VALUES (%s, %s, %s)"
-            params = (uuid.uuid4(), description, transaction_id)
-            cursor.execute(new_transactions_query, params)
-            
-            db_connection.commit()
-            db_connection.close()
-
+            try:
+                # Begin the transaction
+                db_connection.autocommit = False
+                # get the transaction
+                sql_query = "SELECT id FROM fintech_testbed_app_transactions WHERE id = %s"
+                params = (transaction_id,)
+                cursor.execute(sql_query, params)
+                result = cursor.fetchall()
+                
+                # add to transaction table
+                result = result[0]
+                transaction_id = result[0]
+                new_transactions_query = "INSERT INTO fintech_testbed_app_flagged_transactions (id, description, transactions_id) VALUES (%s, %s, %s)"
+                params = (uuid.uuid4(), description, transaction_id)
+                cursor.execute(new_transactions_query, params)
+                
+                # class connection
+                db_connection.commit()
+            except psycopg2.Error as e:
+                # Rollback the transaction
+                db_connection.rollback()
+            finally:
+                db_connection.close()
 
             del request.session["selected_transaction"]
         else:
