@@ -14,6 +14,7 @@ import bcrypt
 from urllib.parse import urlencode
 from django.urls import reverse
 from datetime import datetime
+from fintech_testbed_app import views_helpers as helper
 
 BYPASS_2FA_DEBUG = True
 HARDCODED_MANAGER_PIN = '0423'
@@ -21,65 +22,12 @@ def transfer(request):
     page_args = {
         'is_logged_in': ('username' in request.session)
     }
-    
-    def get_user(username):
-        # get the user
-        db_connection = connections['default']
-        cursor = db_connection.cursor()
-        sql_query = "SELECT username, balance, id FROM fintech_testbed_app_client WHERE username = %s"
-        params = (username,)
-        cursor.execute(sql_query, params)
-        result = cursor.fetchall()
-        db_connection.commit()
-        db_connection.close()
-        if result:
-            result = result[0]
-            return result
-        else:
-            return None
-
-    def string_to_float(value):
-        try:
-            integer_value = float(value)
-            return integer_value
-        except ValueError:
-            return None
-
-    def make_transaction(sender, reciever, value):
-        db_connection = connections['default']
-        cursor = db_connection.cursor()
-
-        try:
-            # Begin the transaction
-            db_connection.autocommit = False
-            print("transaction id: ")
-            print(user_id)
-            new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
-            params = (uuid.uuid4(), sender, reciever, value, str(datetime.now()), "cashier check")
-            cursor.execute(new_transactions_query, params)
-
-            db_connection.commit()
-        except psycopg2.Error as e:
-            # Rollback the transaction
-            db_connection.rollback()
-        finally:
-            db_connection.close()
-    
-    def update_balance(username, balance):
-        db_connection = connections['default']
-        cursor = db_connection.cursor()
-        query = "UPDATE fintech_testbed_app_client SET balance = balance + %s WHERE username = %s"
-
-        # Execute the update query
-        cursor.execute(query, (balance, username))
-        db_connection.commit()
-        db_connection.close()
 
     if not page_args['is_logged_in']:
         return render(request, "home.html")
     
     # get the user
-    result = get_user(request.session['username'])
+    result = helper.get_user(request.session['username'])
     username = result[0]
     balance = result[1]
     user_id = str(result[2])
@@ -92,11 +40,11 @@ def transfer(request):
 
         if form_type == 'transfer-user':    
             recipient = request.POST['recipient']
-            transfer_amount = string_to_float(request.POST['transfer-amount'])
+            transfer_amount = helper.string_to_float(request.POST['transfer-amount'])
             description = request.POST['description']
             
             # get recipient
-            recipient = get_user(recipient)
+            recipient = helper.get_user(recipient)
 
             # check if recipient exists
             if recipient:
@@ -104,10 +52,10 @@ def transfer(request):
                 recipient_id = str(result[2])
 
                 if transfer_amount and transfer_amount <= balance:
-                    make_transaction(username, recipient_user, transfer_amount)
-                    update_balance(username, -1 * transfer_amount)
-                    update_balance(recipient_user, transfer_amount)
-                    result = get_user(request.session['username'])
+                    helper.make_transaction(username, recipient_user, transfer_amount)
+                    helper.update_balance(username, -1 * transfer_amount)
+                    helper.update_balance(recipient_user, transfer_amount)
+                    result = helper.get_user(request.session['username'])
                     page_args["balance"] = result[1]
                 else:
                     print("Error")
@@ -123,61 +71,6 @@ def cashier(request):
     page_args = {
         'is_logged_in': ('username' in request.session),
     }
-
-    def get_user(username):
-        # get the user
-        db_connection = connections['default']
-        cursor = db_connection.cursor()
-        sql_query = "SELECT username, balance, id FROM fintech_testbed_app_client WHERE username = %s"
-        params = (username,)
-        cursor.execute(sql_query, params)
-        result = cursor.fetchall()
-        db_connection.commit()
-        db_connection.close()
-        if result:
-            result = result[0]
-            return result
-        else:
-            return None
-
-    def string_to_float(value):
-        try:
-            integer_value = float(value)
-            return integer_value
-        except ValueError:
-            return None
-
-    def make_transaction(sender, reciever, value):
-        db_connection = connections['default']
-        cursor = db_connection.cursor()
-
-        try:
-            # Begin the transaction
-            db_connection.autocommit = False
-            print("transaction id: ")
-            print(user_id)
-            new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
-            params = (uuid.uuid4(), sender, reciever, value, str(datetime.now()), "cashier check")
-            cursor.execute(new_transactions_query, params)
-
-            db_connection.commit()
-        except psycopg2.Error as e:
-            # Rollback the transaction
-            db_connection.rollback()
-        finally:
-            db_connection.close()
-    
-    def update_balance(username, balance):
-        db_connection = connections['default']
-        cursor = db_connection.cursor()
-        query = "UPDATE fintech_testbed_app_client SET balance = balance + %s WHERE username = %s"
-
-        # Execute the update query
-        cursor.execute(query, (balance, username))
-        db_connection.commit()
-        db_connection.close()
-
-
     error_message = ''
 
     # check if a button is clicked
@@ -188,17 +81,15 @@ def cashier(request):
             username = request.POST['username']
 
             # get the user
-            result = get_user(username)
+            result = helper.get_user(username)
 
             if result:
                 username = result[0]
                 balance = result[1]
-                print(balance)
                 user_id = str(result[2])
 
                 request.session['cashier_username'] = username
                 request.session['cashier_balance'] = balance
-                print(request.session['cashier_balance'])
                 request.session['cashier_id'] = user_id
             else:
 
@@ -212,38 +103,38 @@ def cashier(request):
 
         elif form_type == 'make-deposit':   # make deposit
             deposit = request.POST['deposit-amount']
-            deposit = string_to_float(deposit)
+            deposit = helper.string_to_float(deposit)
             
             if deposit:
                 username = request.session.get('cashier_username')
-                balance = string_to_float(request.session['cashier_balance'])
+                balance = helper.string_to_float(request.session['cashier_balance'])
                 user_id = request.session.get('cashier_id')
 
                 if deposit >= 5000:
                     manager_pin = request.POST.get('manager-pin')
                     if manager_pin == HARDCODED_MANAGER_PIN:
                         # make transaction
-                        make_transaction(username, username, deposit)
+                        helper.make_transaction(username, username, deposit)
                         # make update balance
-                        update_balance(username, deposit)
+                        helper.update_balance(username, deposit)
                     else:
                         error_message = 'Invalid manager pin. Deposit is over $5000'
                 else:
                     # make transaction
-                    make_transaction(username, username, deposit)
+                    helper.make_transaction(username, username, deposit)
                     # make update balance
-                    update_balance(username, deposit)
+                    helper.update_balance(username, deposit)
             else:
                 error_message = 'Invalid deposit amount.'
                 
         elif form_type == 'make-withdrawal':    # make withdrawal
             withdraw = request.POST['withdraw-amount']
-            withdraw = string_to_float(withdraw)
+            withdraw = helper.string_to_float(withdraw)
 
 
             if withdraw:
                 username = request.session.get('cashier_username')
-                balance = string_to_float(request.session.get('cashier_balance'))
+                balance = helper.string_to_float(request.session.get('cashier_balance'))
                 
                 user_id = request.session.get('cashier_id')
 
@@ -254,16 +145,16 @@ def cashier(request):
                         manager_pin = request.POST.get('manager-pin')
                         if manager_pin == HARDCODED_MANAGER_PIN:
                             # make transaction
-                            make_transaction(username, username, withdraw)
+                            helper.make_transaction(username, username, withdraw)
                             # make update balance
-                            update_balance(username, withdraw*-1)
+                            helper.update_balance(username, withdraw*-1)
                         else:
                             error_message = 'Invalid manager pin. Withdrawal is over $5000'
                     else:
                         # make transaction
-                        make_transaction(username, username, withdraw)
+                        helper.make_transaction(username, username, withdraw)
                         # make update balance
-                        update_balance(username, withdraw*-1)
+                        helper.update_balance(username, withdraw*-1)
                 else:
                     error_message = 'Invalid withdrawal. Amount is higher than balance.'
             else:
@@ -271,7 +162,7 @@ def cashier(request):
         
         # update username details
         if "cashier_username" in request.session:
-            result = get_user(request.session.get('cashier_username'))
+            result = helper.get_user(request.session.get('cashier_username'))
             username = result[0]
             balance = result[1]
             user_id = str(result[2])
@@ -537,13 +428,31 @@ def account(request):
         'is_logged_in': ('username' in request.session)
     }
 
-    db_connection = connections['default']
-    cursor = db_connection.cursor()
+    # set page #
+    if 'account_page_num' not in request.session:
+        request.session['account_page_num'] = 0 
+   
+     # check if a button is clicked
+    if request.method == 'POST':
+        # check where the button was pressed
+        form_type = request.POST.get('form_type', '')
+        
+        # check form type
+        if form_type == 'next-page':
+            request.session['account_page_num'] += 1
+        elif form_type == 'last-page':
+            request.session['account_page_num'] -= 1
+
+    page_args['account_page_num'] = request.session['account_page_num']
+    print(page_args['account_page_num'])
 
     if page_args['is_logged_in']:
         # Populate username
         page_args['username'] = request.session['username']
         
+        db_connection = connections['default']
+        cursor = db_connection.cursor()
+
         # get the user
         sql_query = "SELECT id, balance FROM fintech_testbed_app_client WHERE username = %s"
         params = (page_args['username'],)
@@ -558,37 +467,26 @@ def account(request):
             SELECT t.datetime, t.description, t.sender, t.reciever, t.balance
             FROM fintech_testbed_app_transactions AS t
             JOIN fintech_testbed_app_client AS u ON t.sender = u.username OR t.reciever = u.username
-            WHERE u.username = %s;
+            WHERE u.username = %s
+            ORDER BY t.datetime DESC;
         """
 
         params = (page_args['username'],)
         cursor.execute(sql_query, params)
         result = cursor.fetchall()
-        transactions = result[:10]
+        db_connection.commit()
+        db_connection.close()
 
+        print(len(result))
+        page = request.session['account_page_num']
+        page_args['transactions'] = result[page*11:(page+1)*11]
+        page_args['page_element_size'] = (page+1) * 11
+        page_args['page_element_max'] = len(result)
         # Populate balance
         page_args['balance'] = balance #change this to query
-
-        # Populate Recent Transactions
-        base_transaction = """
-                <span class="date">{}</span>
-                <span class="description">{}</span>
-                <span class="sender">{}</span>
-                <span class="receiver">{}</span>
-                <span class="balance">{}</span>"""
-
-        for index, transaction in enumerate(transactions):   
-            date,description,sender,receiver,balance =  transaction[0], transaction[1], transaction[2], transaction[3], transaction[4]
-            cur_transaction = base_transaction.format(date,description,sender,receiver,balance)
-            page_args['transaction'+str(index)] = cur_transaction
-            print('transaction'+str(index))
         
-        db_connection.commit()
-        db_connection.close()
         return render(request, "account.html", page_args)
     else:
-        db_connection.commit()
-        db_connection.close()
         return render(request, "home.html")
 
 def logout(request):
