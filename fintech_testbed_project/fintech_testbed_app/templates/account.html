@@ -76,20 +76,18 @@
     </div>
 
     {% if selected_transaction %}
-    <div class="transaction-container">
-        
-        <span>{{transaction_date}}
-        <span>{{transaction_sender}} to {{transaction_receiver}}
-        <span>${{transaction_balance}}
-        <form class="login-form" method="post">
-            {% csrf_token %}
-            <div class="form-group">
-                <label>Enter Flag Description</label>
-                <textarea rows="6" cols="25" id="description" name="description" placeholder="Enter your description here..."></textarea>
-            </div>
-            <button type="submit" name="form_type" value="flag-transaction">Submit Concern</button>
+    <div class="selected-transaction-container">
+        <span>Report Selected Transaction</span>
+        <form class="report-form" method="post">
+            <input type="hidden" name="csrfmiddlewaretoken" value="SIBRckQCKlklf3aGkLU5Ma0sz8hlgVMurjtCp5poOyRgKQ3mnxobggVvoOpVQVWK">
+            <textarea rows="6" cols="25" id="description" name="description" placeholder="Describe the problem here..."></textarea>
+            <button type="submit" name="form_type" value="flag-transaction" class="submit-report">Submit Report</button>
         </form>
     </div>
     {% endif %}
+    
+    <div class="account-type-container">
+        <label>Account type:&nbsp;</label><span id="balance-value">Personal
+    </div>
 </div>
 {% endblock %}

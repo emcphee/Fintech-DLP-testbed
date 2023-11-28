@@ -12,7 +12,7 @@
     height: 8vh;
     background-color: rgb(199, 199, 199);
     border-radius: 10px;
-    font-size: 2vw;
+    font-size: calc(1.2vw + 1.2vh);
     margin-left: 3vw;
     margin-top: 3vh;
     display: flex;
@@ -20,17 +20,22 @@
     align-items: center;
 }
 
-.transaction-container {
+.account-type-container {
     width: 16vw;
-    height: 50vh;
+    height: 8vh;
     background-color: rgb(199, 199, 199);
     border-radius: 10px;
-    font-size: 2vw;
+    font-size: calc(0.8vw + 0.8vh);
     margin-left: 3vw;
-    margin-top: 3vh;
+    margin-top: 10vh;
     display: flex;
     justify-content: center;
     align-items: center;
+
+}
+
+.account-type-container label {
+    color: rgb(68, 68, 68)
 }
 
 .account-name-container {
@@ -120,4 +125,68 @@
 
 main {
     position: relative;
+}
+
+
+
+/* "Report Transaction" title */
+.selected-transaction-container span {
+    font-size: calc(0.6vh + 0.6vw);
+    font-family: "Open Sans", sans-serif;
+    margin-bottom: 1vh;
+    margin-top: 1vh;
+
+    border-bottom: 1px solid black;
+}
+
+.selected-transaction-container {
+    width: 16vw;
+    height: 20vh;
+    background-color: rgb(199, 199, 199);
+    border-radius: 10px;
+
+    margin-left: 3vw;
+    margin-top: 10vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    flex-direction: column;
+}
+
+.report-form {
+    font-family: "Open Sans", sans-serif;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    width: 80%;
+    height: 80%;
+}
+
+.report-form textarea {
+    width: 95%;
+    height: 60%;
+
+    padding: 10px;
+    font-family: "Open Sans", sans-serif;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    resize: none;
+}
+
+.report-form textarea:focus {
+    border-color: #858585;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.submit-report {
+    margin-top: 0.5vh;
+
+    width: 80%;
+    height: 15%;
+    background-color: #b2b2b2;
+    border-radius: 4px;
 }
