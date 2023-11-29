@@ -16,7 +16,81 @@ from django.urls import reverse
 from datetime import datetime
 from fintech_testbed_app import views_helpers as helper
 import json
+############### Things for logging ######################
+import logging
+import boto3
+from botocore.exceptions import NoCredentialsError
+import time
 
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Function to send logs to AWS CloudWatch Logs
+def send_logs(log_group, log_stream, log_data):
+    try:
+        # Configure your AWS credentials and region
+        aws_access_key_id = 'your aws key' #'your aws key'
+        aws_secret_access_key = 'your aws secerete'#'your aws secerete'
+        aws_region = 'us-west-2'
+
+        client = boto3.client('logs', region_name=aws_region, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
+
+        # Create or retrieve the log group
+        try:
+            client.create_log_group(logGroupName=log_group)
+            print(f"Log group '{log_group}' created successfully.")
+        except Exception as e:
+            if 'ResourceAlreadyExistsException' in str(e):
+                print(f"Log group '{log_group}' already exists.")
+            else:
+                raise
+
+
+
+         # Check if the log stream exists
+        log_stream_exists = False
+        try:
+            response = client.describe_log_streams(logGroupName=log_group, logStreamNamePrefix=log_stream)
+            log_streams = response.get('logStreams', [])
+    
+            if log_streams:
+                log_stream_exists = True
+                print(f"Log stream '{log_stream}' already exists in '{log_group}'.")
+            else:
+                log_stream_exists = False
+        except Exception as e:
+            if 'ResourceNotFoundException' in str(e):
+                # Log stream doesn't exist, so create it
+                response = client.create_log_stream(logGroupName=log_group, logStreamName=log_stream)
+                print(f"Log stream '{log_stream}' created successfully.")
+            else:
+                print(f"Error: {e}")
+
+        # Create log stream if it doesn't exist
+        if not log_stream_exists:
+            response = client.create_log_stream(logGroupName=log_group, logStreamName=log_stream)
+            print(f"Log stream '{log_stream}' created successfully.")
+        # Send logs to CloudWatch Logs
+        response = client.put_log_events(
+            logGroupName=log_group,
+            logStreamName=log_stream,
+            logEvents=[
+                {
+                    'timestamp': int(round(time.time() * 1000)),
+                    'message': log_data,
+                },
+            ],
+        )
+
+        print(f"Logs sent successfully to {log_group}/{log_stream}")
+    except NoCredentialsError:
+        print("Credentials not available")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+################################################
 BYPASS_2FA_DEBUG = True
 HARDCODED_MANAGER_PIN = '0423'
 def transfer(request):
@@ -58,9 +132,18 @@ def transfer(request):
                     helper.update_balance(recipient_user, transfer_amount)
                     result = helper.get_user(request.session['username'])
                     page_args["balance"] = result[1]
+                    #send logs to AWS
+                    logger.info('Transfer Succesful')
+                    send_logs("Fintech-DLP-BigBank", "Transfer", 'Transfer Succesful')
                 else:
+                    #send logs to AWS
+                    logger.info('Transfer Fail')
+                    send_logs("Fintech-DLP-BigBank", "Transfer", 'Transfer Fail')
                     print("Error")
             else:
+                #send logs to AWS
+                logger.info('Transfer Fail')
+                send_logs("Fintech-DLP-BigBank", "Transfer", 'Transfer Fail')
                 print("Error")
     
     return render(request, "transfer.html", page_args)
@@ -179,6 +262,10 @@ def cashier(request):
                 "error_message": error_message
             }
 
+    #send logs to AWS
+    logger.info('Cashier login')
+    send_logs("Fintech-DLP-BigBank", "Cashier", 'Cashier login succesful')
+
     return render(request, "cashiers-interface.html", page_args)
 
 def home(request):
@@ -198,8 +285,9 @@ def home(request):
             login_url_with_params = f"{login_url}?username={username}&password={password}"
             request.session['login_query_processed'] = False
             return redirect(login_url_with_params)
-
-
+    #send logs to AWS
+    logger.info('Home page visited')
+    send_logs("Fintech-DLP-BigBank", "home page", 'Home page visited')
     return render(request, "home.html", page_args)
 
 def login(request):
@@ -266,10 +354,19 @@ def login(request):
                     #response = sg.send(message)
                 except Exception as e:
                     print("OTP Send Error:", e)
+                    #send logs to AWS
+                    logger.info('Login')
+                    send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed')
             else:
                 error_message = "Invalid Login"
+                #send logs to AWS
+                logger.info('Login')
+                send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed')
         else:
             error_message = "Invalid Login"
+            #send logs to AWS
+            logger.info('Login')
+            send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed')
         
         return {
                     "valid_credentials": valid_credentials, 
@@ -291,6 +388,7 @@ def login(request):
                 'username_sendback' : username
             }
             request.session['login_query_processed'] = True
+            
             return render(request, "login.html", page_args)
 
     # check if a button is clicked
@@ -329,9 +427,15 @@ def login(request):
                 # set the login user and remove the temp user
                 del request.session['temp_user']
                 request.session['username'] = username
+                #send logs to AWS
+                logger.info('Login')
+                send_logs("Fintech-DLP-BigBank", "Login", 'Login Succesful')
                 return home(request) 
             else:
                 error_message = "Wrong code"
+                #send logs to AWS
+                logger.info('Login')
+                send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed, wrong otp')
             
             # make sure the page stays on submit
             valid_credentials = True
@@ -408,6 +512,9 @@ def register(request):
                 db_connection.commit()
                 db_connection.close()
 
+                #send logs to AWS
+                logger.info('Register')
+                send_logs("Fintech-DLP-BigBank", "Register", 'Registration Succesful')
                 # Redirect to a success page or home page
                 return home(request)
             else:
@@ -422,6 +529,9 @@ def register(request):
         'lastname_sendback': lastname,
         'email_sendback': email
     }
+    #send logs to AWS
+    logger.info('Register')
+    send_logs("Fintech-DLP-BigBank", "Register", 'Registration Failed')
     return render(request, "register.html", page_args)
 
 def account(request):
@@ -525,14 +635,23 @@ def account(request):
         page_args['page_element_max'] = len(result)
         # Populate balance
         page_args['balance'] = balance #change this to query
+        #send logs to AWS
+        logger.info('Account')
+        send_logs("Fintech-DLP-BigBank", "Account", 'Account Page visited')
         
         return render(request, "account.html", page_args)
     else:
+        #send logs to AWS
+        logger.info('Account')
+        send_logs("Fintech-DLP-BigBank", "Account", 'Attempt to visit account page has failed')
         return render(request, "home.html")
 
 def logout(request):
     if 'username' in request.session:
         del request.session['username']
+    #send logs to AWS
+    logger.info('Logout')
+    send_logs("Fintech-DLP-BigBank", "Logout", 'logout succesful')
     return login(request)
 
 def is_strong_password(password):
