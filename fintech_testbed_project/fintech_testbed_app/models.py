@@ -160,7 +160,17 @@ class Flagged_Transactions(models.Model):
         help_text = 'The ID of the transaction'
     )
 
+    Client_Username = models.ForeignKey(
+        Client,
+        on_delete=models.CASCADE,
+        default=None,
+        to_field='username',
+        db_column='client_username',
+        help_text = 'The ID of the client'
+    )
+
     description = models.CharField(max_length=5000)
+    datetime = models.CharField(max_length=30)
 
     def __str__(self):
         """String for representing the Model object."""
