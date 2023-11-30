@@ -552,19 +552,17 @@ def account(request):
     if 'account_page_num' not in request.session:
         request.session['account_page_num'] = 0 
 
-    
-    print(page_args)
-     # check if a button is clicked
+    # check if a button is clicked
     if request.method == 'POST':
         # check where the button was pressed
         form_type = request.POST.get('form_type', '')
         
         # check form type
-        if form_type == 'next-page':
+        if form_type == 'next-page':                    # go to next page
             request.session['account_page_num'] += 1
-        elif form_type == 'last-page':
+        elif form_type == 'last-page':                  # go to previous page
             request.session['account_page_num'] -= 1
-        elif form_type == 'flag-transaction':
+        elif form_type == 'flag-transaction':           # add a new transaction flag
             description = request.POST["description"]
             transaction_id = request.session["selected_transaction"]
 
@@ -596,7 +594,7 @@ def account(request):
                 db_connection.close()
 
             del request.session["selected_transaction"]
-        else:
+        else:                                               # transaction clicked
             page_args["selected_transaction"] = request.POST['transaction_id']
             page_args["transaction_date"] = request.POST["date"]
             page_args["transaction_sender"] = request.POST["sender"]
@@ -662,6 +660,55 @@ def account(request):
 def flagged_transaction(request):
     page_args = {
     }
+
+     # set page #
+    if 'flagged_transaction_page_num' not in request.session:
+        request.session['flagged_transactions_page_num'] = 0 
+
+    if request.method == 'POST':
+        # check where the button was pressed
+        form_type = request.POST.get('form_type', '')
+        
+        # check form type
+        if form_type == 'next-page':
+            request.session['account_page_num'] += 1
+        elif form_type == 'last-page':
+            request.session['account_page_num'] -= 1
+        elif form_type == 'cancel-transaction':
+            print("option 1")
+            description = request.POST["description"]
+            flagged_transaction_id = request.session["selected_flagged_transaction"]
+            del request.session["selected_flagged_transaction"]
+        elif form_type == 'reject-flag':
+            print("option 2")
+            description = request.POST["description"]
+            flagged_transaction_id = request.session["selected_flagged_transaction"]
+            del request.session["selected_flagged_transaction"]
+        else:
+            page_args["selected_flagged_transaction"] = request.POST['flagged_transaction_id']
+            page_args["selected_transaction"] = request.POST['transaction_id']
+            page_args["transaction_date"] = request.POST["date"]
+            page_args["transaction_user"] = request.POST["user"]
+            page_args["transaction_description"] = request.POST["description"]
+            request.session["selected_flagged_transaction"] = request.POST['flagged_transaction_id']
+
+    page_args['flagged_transactions_page_num'] = request.session['flagged_transactions_page_num'] 
+
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    # get the transactions
+    sql_query = "SELECT id, datetime, description, client_username, transactions_id FROM fintech_testbed_app_flagged_transactions"
+    cursor.execute(sql_query, )
+    result = cursor.fetchall()
+
+    page = request.session['flagged_transactions_page_num']
+    page_args['transactions'] = result[page*11:(page+1)*11]
+    page_args['page_element_size'] = (page+1) * 11
+    page_args['page_element_max'] = len(result)
+
+    db_connection.commit()
+    db_connection.close()
 
     return render(request, "flagged-transaction-interface.html", page_args) 
 
