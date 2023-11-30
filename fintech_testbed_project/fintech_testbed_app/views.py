@@ -658,6 +658,13 @@ def account(request):
         send_logs("Fintech-DLP-BigBank", "Account", 'Attempt to visit account page has failed')
         return render(request, "home.html")
 
+
+def flagged_transaction(request):
+    page_args = {
+    }
+
+    return render(request, "flagged-transaction-interface.html", page_args) 
+
 def logout(request):
     if 'username' in request.session:
         del request.session['username']
