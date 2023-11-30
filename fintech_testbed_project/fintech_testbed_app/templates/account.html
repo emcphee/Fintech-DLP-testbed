@@ -40,18 +40,47 @@
                     <input type="hidden" name="transaction_id" value="{{ transaction.5 }}">
             </form>
             {% endfor %}
+            
+            <style>
+                .clicked {
+                    border: 4px solid black;
+                }
+            </style>
 
             <script>
-                const transactionDivs = document.querySelectorAll('.clickable-transaction');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const transactionDivs = document.querySelectorAll('.clickable-transaction');
+                    const clickedFormID = sessionStorage.getItem('clickedFormID');
 
-                transactionDivs.forEach(div => {
-                    div.addEventListener('click', function() {
-                        const formClassPrefix = this.classList[1];
-                        const form = this.closest(`.${formClassPrefix}`);
-
-                        if (form) {
-                            form.submit();
+                    if (clickedFormID) {
+                        const clickedForm = document.getElementById(clickedFormID);
+                        if (clickedForm) {
+                            clickedForm.classList.add('clicked');
                         }
+                    }
+
+                    transactionDivs.forEach(div => {
+                        div.addEventListener('click', function(event) {
+                            event.preventDefault();
+
+                            const clickedForm = this;
+                            const formClassPrefix = clickedForm.classList[1];
+                            const form = clickedForm.closest(`.${formClassPrefix}`);
+
+                            if (form) {
+                                transactionDivs.forEach(div => {
+                                    if (div !== clickedForm) {
+                                        div.classList.remove('clicked');
+                                    }
+                                });
+
+                                clickedForm.classList.add('clicked');
+                                const formID = clickedForm.getAttribute('id');
+                                sessionStorage.setItem('clickedFormID', formID);
+
+                                form.submit();
+                            }
+                        });
                     });
                 });
             </script>
@@ -79,7 +108,7 @@
     <div class="selected-transaction-container">
         <span>Report Selected Transaction</span>
         <form class="report-form" method="post">
-            <input type="hidden" name="csrfmiddlewaretoken" value="SIBRckQCKlklf3aGkLU5Ma0sz8hlgVMurjtCp5poOyRgKQ3mnxobggVvoOpVQVWK">
+            {% csrf_token %}
             <textarea rows="6" cols="25" id="description" name="description" placeholder="Describe the problem here..."></textarea>
             <button type="submit" name="form_type" value="flag-transaction" class="submit-report">Submit Report</button>
         </form>
