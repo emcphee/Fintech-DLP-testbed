@@ -116,7 +116,13 @@
     {% endif %}
     
     <div class="account-type-container">
-        <label>Account type:&nbsp;</label><span id="balance-value">Personal
+        
+        <label>Account type:&nbsp;</label><span id="balance-value">
+            {% if is_business %}
+                Business
+            {% else %}
+                Personal
+            {% endif %}
     </div>
 </div>
 {% endblock %}
