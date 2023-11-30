@@ -5,3 +5,109 @@
     <title>Account - Big Bank</title>
     <link rel="stylesheet" href="{% static 'flagged-transaction-interface.css' %}">
 {% endblock %}
+
+
+{% block content %}
+
+<div class="admin-container">
+        
+    <div class="account-name-container">
+        <p><span id="username">Admin Test</span>'s Account</p>
+    </div>
+
+    <div class="transactions-and-label">
+        <label>Recent Flagged Transactions:</label>
+        <div class="transactions-container">
+            <div class="transaction-light" id="labels">
+                <span class="date">Date</span>
+                <span class="description">Description</span>
+                <span class="user">User</span>
+            </div>
+
+            {% for transaction in transactions %}
+            <form action="/flagged-transactions/" method="POST" class="transaction-{{ forloop.counter0|divisibleby:2|yesno:'light,dark' }} clickable-transaction" id="{{ forloop.counter }}">
+                    {% csrf_token %}
+                    <span class="date">{{ transaction.1 }}</span>
+                    <span class="description">{{ transaction.2 }}</span>
+                    <span class="user">{{ transaction.3 }}</span>
+                    <input type="hidden" name="flagged_transaction_id" value="{{ transaction.0 }}">
+                    <input type="hidden" name="date" value="{{ transaction.1 }}">
+                    <input type="hidden" name="description" value="{{ transaction.2 }}">
+                    <input type="hidden" name="user" value="{{ transaction.3 }}">
+                    <input type="hidden" name="transaction_id" value="{{ transaction.4 }}">
+            </form>
+            {% endfor %}
+
+            <style>
+                .clicked {
+                    border: 4px solid black;
+                }
+            </style>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const transactionDivs = document.querySelectorAll('.clickable-transaction');
+                    const clickedFormID = sessionStorage.getItem('clickedFormID');
+
+                    if (clickedFormID) {
+                        const clickedForm = document.getElementById(clickedFormID);
+                        if (clickedForm) {
+                            clickedForm.classList.add('clicked');
+                        }
+                    }
+
+                    transactionDivs.forEach(div => {
+                        div.addEventListener('click', function(event) {
+                            event.preventDefault();
+
+                            const clickedForm = this;
+                            const formClassPrefix = clickedForm.classList[1];
+                            const form = clickedForm.closest(`.${formClassPrefix}`);
+
+                            if (form) {
+                                transactionDivs.forEach(div => {
+                                    if (div !== clickedForm) {
+                                        div.classList.remove('clicked');
+                                    }
+                                });
+
+                                clickedForm.classList.add('clicked');
+                                const formID = clickedForm.getAttribute('id');
+                                sessionStorage.setItem('clickedFormID', formID);
+
+                                form.submit();
+                            }
+                        });
+                    });
+                });
+            </script>
+        </div>
+
+        {% if flagged_transactions_page_num > 0 %}
+        <form class="last-page-form" method="post">
+            {% csrf_token %}
+            <button id="last-page" type="submit" name="form_type" value="last-page">Last Page</button>
+        </form>
+        {% endif %}
+        {% if page_element_max > page_element_size %}
+        <form class="next-page-form" method="post">
+            {% csrf_token %}
+            <button id="next-page" type="submit" name="form_type" value="next-page">Next Page</button>
+        </form>
+        {% endif %}
+        <p><span id="page">{{flagged_transactions_page_num}}</span></p>
+    </div>
+
+    {% if selected_flagged_transaction %}
+    <div class="selected-transaction-container">
+        <span>Report Transaction Findings</span>
+        <form class="report-form" method="post">
+            {% csrf_token %}
+            <textarea rows="6" cols="25" id="description" name="description" placeholder="Describe the decision of the flagged post..."></textarea>
+            <button type="submit" name="form_type" value="cancel-transaction" class="submit-report">Cancel Transaction</button>
+            <button type="submit" name="form_type" value="reject-flag" class="submit-report">Reject Flag</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
