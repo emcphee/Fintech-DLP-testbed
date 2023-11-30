@@ -11,6 +11,7 @@ from sendgrid.helpers.mail import Mail
 from .models import *
 import pyotp
 import bcrypt
+import psycopg2
 from urllib.parse import urlencode
 from django.urls import reverse
 from datetime import datetime
@@ -46,7 +47,7 @@ def make_transaction(sender, reciever, value):
         # Begin the transaction
         db_connection.autocommit = False
         new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
-        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now()), "cashier check")
+        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')), "cashier check")
         cursor.execute(new_transactions_query, params)
         db_connection.commit()
     except psycopg2.Error as e:
