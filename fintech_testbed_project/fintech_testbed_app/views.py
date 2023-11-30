@@ -491,6 +491,12 @@ def register(request):
         email = request.POST['email']
         password = request.POST['password']
         password_confirm = request.POST['password_confirm']
+        
+        # check business check
+        if "business_check" in request.POST:
+            business_checked = True
+        else:
+            business_checked = False
 
         # Check for password strength
         if not is_strong_password(password):
@@ -510,7 +516,7 @@ def register(request):
 
                 # Create a new client
                 new_item_query = "INSERT INTO fintech_testbed_app_client (id, username, email, salt, hashed_password, balance, is_business) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-                params = (uuid.uuid4(), username, email, salt.decode('utf-8'), hashed_password.decode('utf-8'), 0, False)
+                params = (uuid.uuid4(), username, email, salt.decode('utf-8'), hashed_password.decode('utf-8'), 0, business_checked)
                 cursor.execute(new_item_query, params)
                 db_connection.commit()
                 db_connection.close()
@@ -609,13 +615,16 @@ def account(request):
         cursor = db_connection.cursor()
 
         # get the user
-        sql_query = "SELECT id, balance FROM fintech_testbed_app_client WHERE username = %s"
+        sql_query = "SELECT id, balance, is_business FROM fintech_testbed_app_client WHERE username = %s"
         params = (page_args['username'],)
         cursor.execute(sql_query, params)
         result = cursor.fetchall()
         result = result[0]
         user_id = result[0]
         balance = result[1]
+        is_business = result[2]
+
+        page_args['is_business'] = is_business
 
         # get transactions from user account
         sql_query = """
