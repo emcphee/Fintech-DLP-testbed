@@ -16,6 +16,9 @@ from django.urls import reverse
 from datetime import datetime
 from fintech_testbed_app import views_helpers as helper
 import json
+import psycopg2
+
+
 ############### Things for logging ######################
 import logging
 import boto3
@@ -574,8 +577,8 @@ def account(request):
                 # add to transaction table
                 result = result[0]
                 transaction_id = result[0]
-                new_transactions_query = "INSERT INTO fintech_testbed_app_flagged_transactions (id, description, transactions_id) VALUES (%s, %s, %s)"
-                params = (uuid.uuid4(), description, transaction_id)
+                new_transactions_query = "INSERT INTO fintech_testbed_app_flagged_transactions (id, description, transactions_id, client_username, datetime) VALUES (%s, %s, %s, %s, %s)"
+                params = (uuid.uuid4(), description, transaction_id, str(request.session['username']), str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
                 cursor.execute(new_transactions_query, params)
                 
                 # class connection
