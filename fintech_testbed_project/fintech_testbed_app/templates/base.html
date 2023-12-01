@@ -27,7 +27,7 @@
                 <a href="/">Home</a>
             </div>
             
-            {% if is_logged_in %}
+            {% if client_is_logged_in %}
             <div class="nav-link">
                 <a href="/account">Account</a>
             </div>
@@ -37,9 +37,22 @@
             <div class="nav-link">
                 <a href="/logout">Logout</a>
             </div>
+            {% elif admin_is_logged_in %}
+            <div class="nav-link">
+                <a href="/cashier">Cashier</a>
+            </div>
+            <div class="nav-link">
+                <a href="/flagged-transactions">Flagged Transactions</a>
+            </div>
+            <div class="nav-link">
+                <a href="/logout">Logout</a>
+            </div>
             {% else %}
             <div class="nav-link">
                 <a href="/login">Login</a>
+            </div>
+            <div class="nav-link">
+                <a href="/admin-login">Admin-Login</a>
             </div>
             {% endif %}
 
