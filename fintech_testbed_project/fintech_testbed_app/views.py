@@ -712,9 +712,20 @@ def flagged_transaction(request):
             except Exception as e:
                 print("OTP Send Error:", e)
 
-            del request.session["selected_flagged_transaction"]
+            if form_type == 'cancel-transaction':
+                helper.undo_transaction(request.session["selected_flagged_transaction_id"], request.session["selected_flagged_transaction_sender"], request.session["selected_flagged_transaction_reciever"], request.session["selected_flagged_transaction_balance"])
+                helper.delete_flagged_transaction(request.session["selected_flagged_transaction"])
+            elif  form_type == 'reject-flag':
+                helper.delete_flagged_transaction(request.session["selected_flagged_transaction"])
+                
+            # delete session vars
+            del request.session["selected_flagged_transaction_id"] 
             del request.session["selected_flagged_transaction_user"]
-            
+            del request.session["selected_flagged_transaction_sender"]
+            del request.session["selected_flagged_transaction_reciever"]
+            del request.session["selected_flagged_transaction_balance"]
+            del request.session["selected_flagged_transaction"]
+
         else:
             page_args["selected_flagged_transaction"] = request.POST['flagged_transaction_id']
             page_args["selected_transaction"] = request.POST['transaction_id']
@@ -730,7 +741,11 @@ def flagged_transaction(request):
             page_args["transaction_reciever"] = result[3]
             page_args["transaction_sender"] = result[4]
 
+            request.session["selected_flagged_transaction_id"] = page_args["selected_transaction"]
             request.session["selected_flagged_transaction_user"] = request.POST['user']
+            request.session["selected_flagged_transaction_sender"] = page_args["transaction_sender"]
+            request.session["selected_flagged_transaction_reciever"] = page_args["transaction_reciever"]
+            request.session["selected_flagged_transaction_balance"] = page_args["transaction_balance"]
             request.session["selected_flagged_transaction"] = request.POST['flagged_transaction_id']
 
     page_args['flagged_transactions_page_num'] = request.session['flagged_transactions_page_num'] 
