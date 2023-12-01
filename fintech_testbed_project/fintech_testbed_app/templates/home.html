@@ -8,7 +8,7 @@
 
 {% block content %}
 
-{% if not is_logged_in %}
+{% if not client_is_logged_in and not admin_is_logged_in %}
 <div class="login-container">
     <form class="login-form" action="#" method="post">
         {% csrf_token %}
@@ -29,10 +29,10 @@
     <img src="{% static 'images/lance-asper-DerLYBxbrsw-unsplash.jpg' %}" alt="Photo of a snowy town by Lance Asper" class="home-background">
     <div class="overlay-container">
         <div class="text-overlay">
-            {% if not is_logged_in %}
+            {% if not client_is_logged_in and not admin_is_logged_in %}
                 <h1>Looking for a secure banking experience?</h1>
                 <a href="/register" class="register-button">Register Now</a>
-            {% else %}
+            {% elif client_is_logged_in %}
                 <h1>Welcome back {{username}}!</h1>
                 <a href="/account" class="register-button">View Account</a>
             {% endif %}
