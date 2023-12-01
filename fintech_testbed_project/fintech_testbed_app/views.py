@@ -17,7 +17,7 @@ from datetime import datetime
 from fintech_testbed_app import views_helpers as helper
 import json
 import psycopg2
-
+from django.http import JsonResponse
 
 ############### Things for logging ######################
 import logging
@@ -744,3 +744,10 @@ def is_strong_password(password):
 
     # If all criteria are met, the password is considered strong
     return True
+
+# checks the login status and returns a json response depending on the status
+def check_login_status(request):
+    if 'username' in request.session:
+        return JsonResponse({'status': 'logged_in'})
+    else:
+        return JsonResponse({'status': 'logged_out'})
