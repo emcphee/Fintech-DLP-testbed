@@ -72,7 +72,7 @@ def string_to_float(value):
     except ValueError:
         return None
 
-def make_transaction(sender, reciever, value):
+def make_transaction(sender, reciever, value, description):
     db_connection = connections['default']
     cursor = db_connection.cursor()
 
@@ -80,7 +80,7 @@ def make_transaction(sender, reciever, value):
         # Begin the transaction
         db_connection.autocommit = False
         new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
-        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')), "cashier check")
+        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')), description)
         cursor.execute(new_transactions_query, params)
         db_connection.commit()
     except psycopg2.Error as e:
@@ -122,7 +122,7 @@ def delete_flagged_transaction(transaction_id):
     try:
         db_connection.autocommit = False
         query = "DELETE FROM fintech_testbed_app_flagged_transactions WHERE id = %s"
-        param = (transaction_id)
+        param = (str(transaction_id),)
         cursor.execute(query, param)
         db_connection.commit()
     except psycopg2.Error as e:
