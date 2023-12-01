@@ -471,6 +471,12 @@ def login(request):
     # stay on page
     return render(request, "login.html", page_args)
 
+def admin_login(request):
+    page_args = {}
+
+    # stay on page
+    return render(request, "admin-login.html", page_args)
+
 def services(request):
     page_args = {
         'is_logged_in': ('username' in request.session)
