@@ -94,7 +94,7 @@ def send_logs(log_group, log_stream, log_data):
 
 
 ################################################
-BYPASS_2FA_DEBUG = True
+BYPASS_2FA_DEBUG = False
 HARDCODED_MANAGER_PIN = '0423'
 def transfer(request):
     page_args = {
@@ -285,9 +285,11 @@ def home(request):
             login_url = reverse('login')
             username = request.POST['username']
             password = request.POST['password']
-            login_url_with_params = f"{login_url}?username={username}&password={password}"
             request.session['login_query_processed'] = False
-            return redirect(login_url_with_params)
+            request.session['home_username_input'] = username
+            request.session['home_password_input'] = password
+            return redirect(login_url)
+    
     #send logs to AWS
     logger.info('Home page visited')
     send_logs("Fintech-DLP-BigBank", "home page", 'Home page visited')
@@ -376,20 +378,24 @@ def login(request):
                     "error_message": error_message
                 }
     
-    username = request.GET.get('username', None)
-    password = request.GET.get('password', None)
 
     if 'login_query_processed' in request.session:
-        if(username and password and not request.session.get('login_query_processed')):
-            result = check_credentials(request, username, password)
+        if (
+            'home_username_input' in request.session and 
+            'home_password_input' in request.session and 
+            not request.session.get('login_query_processed')
+        ):
+            result = check_credentials(request, request.session['home_username_input'], request.session['home_password_input'])
             error_message = result['error_message']
             valid_credentials = result['valid_credentials']
             page_args = {
                 'is_logged_in': ('username' in request.session),
                 'error_message' : error_message,
                 'valid_credentials' : valid_credentials,
-                'username_sendback' : username
+                'username_sendback' : request.session['home_username_input']
             }
+            del request.session['home_username_input']
+            del request.session['home_password_input']
             request.session['login_query_processed'] = True
             
             return render(request, "login.html", page_args)
@@ -429,8 +435,10 @@ def login(request):
             if BYPASS_2FA_DEBUG or token == totp.now():
                 # set the login user and remove the temp user
                 del request.session['temp_user']
+                del request.session['secret']
                 request.session['username'] = username
-                #send logs to AWS
+                
+                # send logs to AWS
                 logger.info('Login')
                 send_logs("Fintech-DLP-BigBank", "Login", 'Login Succesful')
                 return home(request) 
