@@ -69,7 +69,7 @@
 </html>
 
 <script>
-    var time_count = 300000;    // set to 5 min
+    var time_count = 300;       // set to 5 min (300 sec)
     var countdown = time_count; // Countdown time in seconds
     var timer_interval;
 
@@ -87,7 +87,6 @@
                 clearInterval(timer_interval);
                 console.log('Reset');
                 checkLoginStatus();
-                alert("Logged out due to inactivity");
             }
         }, 1000); // Update every second 
     }
