@@ -132,7 +132,7 @@ def transfer(request):
                 recipient_id = str(result[2])
 
                 if transfer_amount and transfer_amount <= balance:
-                    helper.make_transaction(username, recipient_user, transfer_amount)
+                    helper.make_transaction(username, recipient_user, transfer_amount, description)
                     helper.update_balance(username, -1 * transfer_amount)
                     helper.update_balance(recipient_user, transfer_amount)
                     result = helper.get_user(request.session['username'])
@@ -203,14 +203,14 @@ def cashier(request):
                     manager_pin = request.POST.get('manager-pin')
                     if manager_pin == HARDCODED_MANAGER_PIN:
                         # make transaction
-                        helper.make_transaction(username, username, deposit)
+                        helper.make_transaction(username, username, deposit, "cashier check")
                         # make update balance
                         helper.update_balance(username, deposit)
                     else:
                         error_message = 'Invalid manager pin. Deposit is over $5000'
                 else:
                     # make transaction
-                    helper.make_transaction(username, username, deposit)
+                    helper.make_transaction(username, username, deposit, "cashier check")
                     # make update balance
                     helper.update_balance(username, deposit)
             else:
@@ -234,14 +234,14 @@ def cashier(request):
                         manager_pin = request.POST.get('manager-pin')
                         if manager_pin == HARDCODED_MANAGER_PIN:
                             # make transaction
-                            helper.make_transaction(username, username, withdraw)
+                            helper.make_transaction(username, username, withdraw, "cashier check")
                             # make update balance
                             helper.update_balance(username, withdraw*-1)
                         else:
                             error_message = 'Invalid manager pin. Withdrawal is over $5000'
                     else:
                         # make transaction
-                        helper.make_transaction(username, username, withdraw)
+                        helper.make_transaction(username, username, withdraw, "cashier check")
                         # make update balance
                         helper.update_balance(username, withdraw*-1)
                 else:
@@ -716,7 +716,7 @@ def flagged_transaction(request):
                 helper.undo_transaction(request.session["selected_flagged_transaction_id"], request.session["selected_flagged_transaction_sender"], request.session["selected_flagged_transaction_reciever"], request.session["selected_flagged_transaction_balance"])
                 helper.delete_flagged_transaction(request.session["selected_flagged_transaction"])
             elif  form_type == 'reject-flag':
-                helper.delete_flagged_transaction(request.session["selected_flagged_transaction"])
+                helper.delete_flagged_transaction(str(request.session["selected_flagged_transaction"]))
                
             # delete session vars
             del request.session["selected_flagged_transaction_id"] 
