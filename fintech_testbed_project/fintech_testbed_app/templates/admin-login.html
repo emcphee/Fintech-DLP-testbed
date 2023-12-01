@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>Big Bank - Login</title>
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'admin-login.css' %}">
+{% endblock %}
+
+
+{% block content %}
+    <div class="login-container">
+        <h2>Login to Your Admin Account</h2>
+        
+        {% if error_message %}
+        <p class="error-message">{{ error_message }}</p>
+        {% endif %}
+
+        {% if not valid_credentials %}
+        <form class="login-form" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" value="{{ username_sendback }}">
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button class="login-btn" type="submit" name="form_type" value="enter-credentials">Login</button>
+        </form>
+        {% endif %}
+
+        {% if valid_credentials %}
+        <form class="login-form" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="token">Access Token:</label>
+                <input type="text" id="token" name="token" required>
+            </div>
+            <button class="login-btn" type="submit" name="form_type" value="enter-OTP">Submit</button>
+        </form>
+        {% endif %}
+    </div>
+{% endblock %}
