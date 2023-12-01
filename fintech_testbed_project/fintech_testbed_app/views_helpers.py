@@ -20,12 +20,45 @@ def get_user(username):
     # get the user
     db_connection = connections['default']
     cursor = db_connection.cursor()
-    sql_query = "SELECT username, balance, id FROM fintech_testbed_app_client WHERE username = %s"
+    sql_query = "SELECT username, balance, id, email FROM fintech_testbed_app_client WHERE username = %s"
     params = (username,)
     cursor.execute(sql_query, params)
     result = cursor.fetchall()
     db_connection.commit()
     db_connection.close()
+    
+    if result:
+        result = result[0]
+        return result
+    else:
+        return None
+
+def get_flagged_transactions():
+    # make database connection
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    # get the transactions
+    sql_query = "SELECT id, datetime, description, client_username, transactions_id FROM fintech_testbed_app_flagged_transactions"
+    cursor.execute(sql_query, )
+    result = cursor.fetchall()
+    db_connection.commit()
+    db_connection.close()
+    return result
+
+def get_transaction_by_id(transaction_id):
+    # make database connection
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    # get the transactions
+    sql_query = "SELECT id, balance, datetime, description, reciever, sender FROM fintech_testbed_app_transactions WHERE id = %s"
+    params = (transaction_id,)
+    cursor.execute(sql_query, params)
+    result = cursor.fetchall()
+    db_connection.commit()
+    db_connection.close()
+
     if result:
         result = result[0]
         return result
@@ -56,6 +89,26 @@ def make_transaction(sender, reciever, value):
     finally:
         db_connection.close()
     
+
+def undo_transaction(sender, reciever, value):
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    try:
+        # Begin the transaction
+        db_connection.autocommit = False
+        query = "UPDATE fintech_testbed_app_client SET balance = balance + %s WHERE username = %s"
+        sender_params = (value, sender)
+        receiver_params = (value * -1, receiver)
+        cursor.execute(query, sender_params)
+        cursor.execute(query, receiver_params)
+        db_connection.commit()
+    except psycopg2.Error as e:
+        # Rollback the transaction
+        db_connection.rollback()
+    finally:
+        db_connection.close()
+
 def update_balance(username, balance):
     db_connection = connections['default']
     cursor = db_connection.cursor()
