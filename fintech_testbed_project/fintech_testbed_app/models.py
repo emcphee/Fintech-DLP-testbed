@@ -44,7 +44,8 @@ class Admin(models.Model):
     
     username = models.CharField(
         max_length=100, 
-        help_text='Enter a admin username'
+        help_text='Enter a admin username',
+        unique=True
     )
 
     email = models.CharField(
@@ -99,7 +100,7 @@ class Client(models.Model):
         help_text='Enter a hash'
     )
 
-    balance = models.FloatField()
+    balance = models.FloatField(default=0)
 
     is_business = models.BooleanField(default=False)
 
@@ -115,26 +116,40 @@ class Transactions(models.Model):
         help_text = 'Unique ID for the transactions'
     )
 
-    # temp
+    # Account sending money
     sender = models.ForeignKey(
         Client,
         on_delete=models.CASCADE,
         related_name='sent_transactions', 
+        null=True,
         default=None,
         to_field='username',
         db_column='sender',
-        help_text = 'The ID of the client'
+        help_text = 'The username of the client'
     )
 
-    # temp
+    # Account recieving money
     reciever = models.ForeignKey(
         Client,
         on_delete=models.CASCADE,
         related_name='received_transactions',
+        null=True,
         default=None,
         to_field='username',
         db_column='reciever',
-        help_text = 'The ID of the client'
+        help_text = 'The username of the client'
+    )
+
+    # used if an admin is in control of a transaction
+    admin_cashier = models.ForeignKey(
+        Admin,
+        on_delete=models.CASCADE,
+        related_name='admin_control',
+        null=True,
+        default=None,
+        to_field='username',
+        db_column='admin_cashier',
+        help_text = 'The username of the admin'
     )
 
     balance = models.FloatField()
