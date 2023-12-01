@@ -95,7 +95,9 @@ def send_logs(log_group, log_stream, log_data):
 
 ################################################
 BYPASS_2FA_DEBUG = False
+EMAIL_ENABLED = False
 HARDCODED_MANAGER_PIN = '0423'
+
 def transfer(request):
     page_args = {
         'is_logged_in': ('username' in request.session)
@@ -347,7 +349,7 @@ def login(request):
                 message = Mail(
                     from_email='bigbankwebservice@gmail.com',
                     to_emails= email,
-                    subject='Hello, World!',
+                    subject='BigBank Verification',
                     plain_text_content=totp.now()
                 )
 
@@ -355,8 +357,10 @@ def login(request):
                 # NOTE COMMENTED OUT FOR NOW UNCOMMENT FOR EMAIL TO WORK
                 try:
                     sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-                    # uncomment for email to be sent
-                    #response = sg.send(message)
+                    
+                    # send email if it is enabled
+                    if EMAIL_ENABLED:
+                        response = sg.send(message)
                 except Exception as e:
                     print("OTP Send Error:", e)
                     #send logs to AWS
@@ -664,7 +668,6 @@ def account(request):
         send_logs("Fintech-DLP-BigBank", "Account", 'Attempt to visit account page has failed')
         return render(request, "home.html")
 
-
 def flagged_transaction(request):
     page_args = {
     }
@@ -682,41 +685,62 @@ def flagged_transaction(request):
             request.session['account_page_num'] += 1
         elif form_type == 'last-page':
             request.session['account_page_num'] -= 1
-        elif form_type == 'cancel-transaction':
-            print("option 1")
+        elif form_type == 'cancel-transaction' or  form_type == 'reject-flag':
             description = request.POST["description"]
             flagged_transaction_id = request.session["selected_flagged_transaction"]
+            flagged_transaction_user = request.session["selected_flagged_transaction_user"]
+            
+            result = helper.get_user(flagged_transaction_user)
+            email = result[3]
+            
+            # set the message to be sent
+            essage = Mail(
+                from_email='bigbankwebservice@gmail.com',
+                to_emails= email,
+                subject='BigBank Flagged Transaction Findings',
+                plain_text_content=description
+            )
+
+            # attempt to send email
+            # NOTE COMMENTED OUT FOR NOW UNCOMMENT FOR EMAIL TO WORK
+            try:
+                sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+                    
+                # send email if it is enabled
+                if EMAIL_ENABLED:
+                    response = sg.send(message)
+            except Exception as e:
+                print("OTP Send Error:", e)
+
             del request.session["selected_flagged_transaction"]
-        elif form_type == 'reject-flag':
-            print("option 2")
-            description = request.POST["description"]
-            flagged_transaction_id = request.session["selected_flagged_transaction"]
-            del request.session["selected_flagged_transaction"]
+            del request.session["selected_flagged_transaction_user"]
+            
         else:
             page_args["selected_flagged_transaction"] = request.POST['flagged_transaction_id']
             page_args["selected_transaction"] = request.POST['transaction_id']
-            page_args["transaction_date"] = request.POST["date"]
-            page_args["transaction_user"] = request.POST["user"]
-            page_args["transaction_description"] = request.POST["description"]
+            page_args["flagged_transaction_date"] = request.POST["date"]
+            page_args["flagged_transaction_user"] = request.POST["user"]
+            page_args["flagged_transaction_description"] = request.POST["description"]
+            
+            # get the transaction info
+            result = helper.get_transaction_by_id(str(request.POST['transaction_id']))
+            page_args["transaction_balance"] = result[0]
+            page_args["transaction_date"] = result[1]
+            page_args["transaction_description"] = result[2]
+            page_args["transaction_reciever"] = result[3]
+            page_args["transaction_sender"] = result[4]
+
+            request.session["selected_flagged_transaction_user"] = request.POST['user']
             request.session["selected_flagged_transaction"] = request.POST['flagged_transaction_id']
 
     page_args['flagged_transactions_page_num'] = request.session['flagged_transactions_page_num'] 
 
-    db_connection = connections['default']
-    cursor = db_connection.cursor()
-
-    # get the transactions
-    sql_query = "SELECT id, datetime, description, client_username, transactions_id FROM fintech_testbed_app_flagged_transactions"
-    cursor.execute(sql_query, )
-    result = cursor.fetchall()
+    result = helper.get_flagged_transactions()
 
     page = request.session['flagged_transactions_page_num']
     page_args['transactions'] = result[page*11:(page+1)*11]
     page_args['page_element_size'] = (page+1) * 11
     page_args['page_element_max'] = len(result)
-
-    db_connection.commit()
-    db_connection.close()
 
     return render(request, "flagged-transaction-interface.html", page_args) 
 
