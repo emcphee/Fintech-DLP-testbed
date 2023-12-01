@@ -20,7 +20,24 @@ def get_user(username):
     # get the user
     db_connection = connections['default']
     cursor = db_connection.cursor()
-    sql_query = "SELECT username, balance, id, email FROM fintech_testbed_app_client WHERE username = %s"
+    sql_query = "SELECT username, balance, id, email, salt, hashed_password FROM fintech_testbed_app_client WHERE username = %s"
+    params = (username,)
+    cursor.execute(sql_query, params)
+    result = cursor.fetchall()
+    db_connection.commit()
+    db_connection.close()
+    
+    if result:
+        result = result[0]
+        return result
+    else:
+        return None
+
+def get_admin_user(username):
+    # get the user
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+    sql_query = "SELECT id, username, email, hashed_password, salt FROM fintech_testbed_app_admin WHERE username = %s"
     params = (username,)
     cursor.execute(sql_query, params)
     result = cursor.fetchall()
@@ -79,7 +96,7 @@ def make_transaction(sender, reciever, value, description, admin):
     try:
         # Begin the transaction
         db_connection.autocommit = False
-        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description, admin) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description, admin_cashier) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         params = (uuid.uuid4(), sender, reciever, value, str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')), description, admin)
         cursor.execute(new_transactions_query, params)
         db_connection.commit()
@@ -145,3 +162,46 @@ def update_balance(username, balance):
     cursor.execute(query, (balance, username))
     db_connection.commit()
     db_connection.close()
+
+
+def admin_register(username, email, password):
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    try:
+        db_connection.autocommit = False
+    
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+                    
+        db_connection = connections['default']
+        cursor = db_connection.cursor()
+
+        # Create a new client
+        new_item_query = "INSERT INTO fintech_testbed_app_admin (id, username, email, salt, hashed_password) VALUES (%s, %s, %s, %s, %s)"
+        params = (uuid.uuid4(), username, email, salt.decode('utf-8'), hashed_password.decode('utf-8'))
+        cursor.execute(new_item_query, params)
+        db_connection.commit()
+    except psycopg2.Error as e:
+        # Rollback the transaction
+        db_connection.rollback()
+    finally:
+        db_connection.close()
+
+def admin_all_select():
+    # make database connection
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    # get the transactions
+    sql_query = "SELECT id, username, email, salt, hashed_password FROM fintech_testbed_app_admin"
+    cursor.execute(sql_query, )
+    result = cursor.fetchall()
+    db_connection.commit()
+    db_connection.close()
+
+    if result:
+        result = result[0]
+        return result
+    else:
+        return None
