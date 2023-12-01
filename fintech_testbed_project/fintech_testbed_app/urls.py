@@ -14,4 +14,5 @@ urlpatterns = [
     path('cashier/', views.cashier, name='cashier'),
     path('transfer/', views.transfer, name='transfer'),
     path('flagged-transactions/', views.flagged_transaction, name='flagged-transfer'),
+    path('check_login_status/', views.check_login_status, name='checkLoginStatus'),
 ]
