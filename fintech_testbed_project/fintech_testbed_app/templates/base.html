@@ -67,3 +67,61 @@
     </footer>
 </body>
 </html>
+
+<script>
+    var time_count = 300000;    // set to 5 min
+    var countdown = time_count; // Countdown time in seconds
+    var timer_interval;
+
+    /*
+        Starts the timer when the window opens
+    */
+    function startTimer() 
+    {
+        clearInterval(timer_interval);
+        timer_interval = setInterval(function() {
+            countdown--;    
+
+            // log user out if the countdown finshes
+            if (countdown <= 0) {
+                clearInterval(timer_interval);
+                console.log('Reset');
+                checkLoginStatus();
+                alert("Logged out due to inactivity");
+            }
+        }, 1000); // Update every second 
+    }
+
+    /*
+        Checks the login status and logs the user out if they logged in
+    */
+    function checkLoginStatus() 
+    {
+        // AJAX request to check login status
+        fetch('/check_login_status/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'logged_in')
+                {
+                    console.log('User is logged in');
+                    window.location.href = '/logout';
+                } 
+            })
+    }
+
+    /*
+        Reset the timer to time count
+    */
+    function resetTimer() 
+    {
+        countdown = time_count;
+        console.log('Reset');
+        startTimer();
+    }
+
+    document.addEventListener('mousemove', resetTimer); // Reset timer on mouse movement
+    document.addEventListener('keypress', resetTimer);  // Reset timer on key press
+
+    // Start the timer when the page loads
+    window.onload = startTimer;
+</script>
