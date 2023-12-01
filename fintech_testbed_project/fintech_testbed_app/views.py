@@ -29,6 +29,24 @@ import time
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+import requests
+
+def ip_to_city(ip):
+    url = 'http://ip-api.com/json/' + ip
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            json_response = response.json()
+            return json_response['city']
+        else:
+            return None
+
+    except requests.exceptions.RequestException as e:
+        return None
+
+ip = '69.166.44.39'
+print(ip_to_city(ip))
+
 # Function to send logs to AWS CloudWatch Logs
 def send_logs(log_group, log_stream, log_data):
     try:
@@ -94,16 +112,16 @@ def send_logs(log_group, log_stream, log_data):
 
 
 ################################################
-BYPASS_2FA_DEBUG = False
+BYPASS_2FA_DEBUG = True
 EMAIL_ENABLED = False
 HARDCODED_MANAGER_PIN = '0423'
 
 def transfer(request):
     page_args = {
-        'is_logged_in': ('username' in request.session)
+        'client_is_logged_in': ('username' in request.session)
     }
 
-    if not page_args['is_logged_in']:
+    if not page_args['client_is_logged_in']:
         return render(request, "home.html")
     
     # get the user
@@ -158,9 +176,13 @@ def cashier(request):
 
     # Check if the variable exists in the local variables dictionary
     page_args = {
-        'is_logged_in': ('username' in request.session),
+        'admin_is_logged_in': ('admin_username' in request.session)
     }
     error_message = ''
+
+    # if admin is not logged in exit page
+    if 'admin_username' not in request.session:
+        return render(request, "home.html")
 
     # check if a button is clicked
     if request.method == 'POST':
@@ -261,7 +283,7 @@ def cashier(request):
             request.session['cashier_id'] = user_id
 
             page_args = {
-                'is_logged_in': ('username' in request.session),
+                'admin_is_logged_in': ('admin_username' in request.session),
                 "username": username,
                 "balance": balance,
                 "error_message": error_message
@@ -275,9 +297,10 @@ def cashier(request):
 
 def home(request):
     page_args = {
-        'is_logged_in': ('username' in request.session)
+        'client_is_logged_in': ('username' in request.session),
+        'admin_is_logged_in': ('admin_username' in request.session)
     }
-    if page_args['is_logged_in']:
+    if page_args['client_is_logged_in']:
         page_args['username'] = request.session['username']
 
     if request.method == 'POST':
@@ -298,36 +321,21 @@ def home(request):
     return render(request, "home.html", page_args)
 
 def login(request):
-    # initialize the database connection
-    db_connection = connections['default']
-    cursor = db_connection.cursor()
-
     # initialize the checks
     error_message = None
     valid_credentials = None
     
     def check_credentials(request, username, password):
-        # query to check if it exists in the db
-        sql_query = "SELECT salt, hashed_password, email FROM fintech_testbed_app_client WHERE username = %s"
-        params = (username,)
-        cursor.execute(sql_query, params)
-        result = cursor.fetchall()
-        
-        if result:
-            result = result[0]
-            obj_exists = True
-        else:
-            obj_exists = False
-            
-
         valid_credentials = False
         error_message = None
 
-        # if found
-        if obj_exists:
-            salt = result[0]
-            hashed_password = result[1]
-            email = result[2]
+        # query to check if it exists in the db        
+        result = helper.get_user(username)
+
+        if result:
+            salt = result[4]
+            hashed_password = result[5]
+            email = result[3]
                     
             hashed_entered_password = bcrypt.hashpw(password.encode('utf-8'), salt.encode('utf-8'))
 
@@ -370,7 +378,7 @@ def login(request):
                 error_message = "Invalid Login"
                 #send logs to AWS
                 logger.info('Login')
-                send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed')
+                send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed')           
         else:
             error_message = "Invalid Login"
             #send logs to AWS
@@ -393,7 +401,7 @@ def login(request):
             error_message = result['error_message']
             valid_credentials = result['valid_credentials']
             page_args = {
-                'is_logged_in': ('username' in request.session),
+                'client_is_logged_in': ('username' in request.session),
                 'error_message' : error_message,
                 'valid_credentials' : valid_credentials,
                 'username_sendback' : request.session['home_username_input']
@@ -417,7 +425,7 @@ def login(request):
             error_message = result['error_message']
             valid_credentials = result['valid_credentials']
             page_args = {
-                'is_logged_in': ('username' in request.session),
+                'client_is_logged_in': ('username' in request.session),
                 'error_message' : error_message,
                 'valid_credentials' : valid_credentials,
                 'username_sendback' : username
@@ -456,42 +464,170 @@ def login(request):
             valid_credentials = True
 
     page_args = {
-        'is_logged_in': ('username' in request.session),
+        'client_is_logged_in': ('username' in request.session),
         'error_message' : error_message,
         'valid_credentials' : valid_credentials,
         'username_sendback' : ''
     }
 
-    username = None
-    password = None
-
-    db_connection.commit()
-    db_connection.close()
-
     # stay on page
     return render(request, "login.html", page_args)
 
 def admin_login(request):
-    page_args = {}
+
+    results = helper.admin_all_select()
+
+    # set default admin
+    if results == None:
+        helper.admin_register("BigBank", "bigbankwebservice@gmail.com", "BankMainAdmin1!")
+
+    # initialize the checks
+    error_message = None
+    valid_credentials = None
+    
+    def check_credentials(request, username, password):
+        valid_credentials = False
+        error_message = None
+
+        # query to check if it exists in the db        
+        result = helper.get_admin_user(username)
+
+        if result:
+            salt = result[4]
+            hashed_password = result[3]
+            email = result[2]
+                    
+            hashed_entered_password = bcrypt.hashpw(password.encode('utf-8'), salt.encode('utf-8'))
+
+            if hashed_entered_password == hashed_password.encode('utf-8'):
+                # update credentials
+                valid_credentials = True
+                        
+                # generate 2FA code
+                secret = pyotp.random_base32()
+                totp = pyotp.TOTP(secret, interval=300)
+                print(totp.now())
+                        
+                # set the session secret key and a temp user that will be
+                # discarded later
+                request.session['admin_secret'] = secret
+                request.session['admin_temp_user'] = username
+
+                # set the message to be sent
+                message = Mail(
+                    from_email='bigbankwebservice@gmail.com',
+                    to_emails= email,
+                    subject='BigBank Verification',
+                    plain_text_content=totp.now()
+                )
+
+                # attempt to send email
+                # NOTE COMMENTED OUT FOR NOW UNCOMMENT FOR EMAIL TO WORK
+                try:
+                    sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+                    
+                    # send email if it is enabled
+                    if EMAIL_ENABLED:
+                        response = sg.send(message)
+                except Exception as e:
+                    print("OTP Send Error:", e)
+                    
+                    #send logs to AWS
+                    #logger.info('Login')
+                    #send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed')
+            else:
+                error_message = "Invalid Login"
+                #send logs to AWS
+                #logger.info('Login')
+                #send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed')           
+        else:
+            error_message = "Invalid Login"
+            
+            #send logs to AWS
+            #logger.info('Login')
+            #send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed')
+        
+        return {
+                    "valid_credentials": valid_credentials, 
+                    "error_message": error_message
+                }
+
+    # check if a button is clicked
+    if request.method == 'POST':
+        # check where the button was pressed
+        form_type = request.POST.get('form_type', '')
+        
+        # check form type
+        if form_type == 'enter-credentials': # user password check
+            username = request.POST['username']
+            password = request.POST['password']
+            result = check_credentials(request, username, password)
+            error_message = result['error_message']
+            valid_credentials = result['valid_credentials']
+            page_args = {
+                'client_is_logged_in': ('username' in request.session),
+                'error_message' : error_message,
+                'valid_credentials' : valid_credentials,
+                'username_sendback' : username
+            }
+            return render(request, "admin-login.html", page_args)
+        elif form_type == 'enter-OTP': # initialize 2FA code check
+            # get session vars
+            secret = request.session.get('admin_secret')
+            username = request.session.get('admin_temp_user')
+
+            # get token
+            totp = pyotp.TOTP(secret, interval=300)
+            token = request.POST['token']
+
+            # if the token matches the current var
+            if BYPASS_2FA_DEBUG or token == totp.now():
+                # set the login user and remove the temp user
+                del request.session['admin_temp_user']
+                del request.session['admin_secret']
+                request.session['admin_username'] = username
+                
+                # send logs to AWS
+                #logger.info('Login')
+                #send_logs("Fintech-DLP-BigBank", "Login", 'Login Succesful')
+                return home(request) 
+            else:
+                error_message = "Wrong code"
+                #send logs to AWS
+                #logger.info('Login')
+                #send_logs("Fintech-DLP-BigBank", "Login", 'Login Failed, wrong otp')
+            
+            # make sure the page stays on submit
+            valid_credentials = True
+
+    page_args = {
+        'admin_is_logged_in': ('admin_username' in request.session),
+        'error_message' : error_message,
+        'valid_credentials' : valid_credentials,
+        'username_sendback' : ''
+    }
 
     # stay on page
     return render(request, "admin-login.html", page_args)
 
 def services(request):
     page_args = {
-        'is_logged_in': ('username' in request.session)
+        'client_is_logged_in': ('username' in request.session),
+        'admin_is_logged_in': ('admin_username' in request.session)
     }
     return render(request, "services.html", page_args)
 
 def aboutus(request):
     page_args = {
-        'is_logged_in': ('username' in request.session)
+        'client_is_logged_in': ('username' in request.session),
+        'admin_is_logged_in': ('admin_username' in request.session)
     }
     return render(request, "aboutus.html", page_args)
 
 def contactus(request):
     page_args = {
-        'is_logged_in': ('username' in request.session)
+        'client_is_logged_in': ('username' in request.session),
+        'admin_is_logged_in': ('admin_username' in request.session)
     }
     return render(request, "contactus.html", page_args)
 
@@ -550,7 +686,8 @@ def register(request):
 
     page_args = {
         "error_message": error_message,
-        'is_logged_in': ('username' in request.session),
+        'client_is_logged_in': ('username' in request.session),
+        'admin_is_logged_in': ('admin_username' in request.session),
         'username_sendback': username,
         'firstname_sendback': firstname,
         'lastname_sendback': lastname,
@@ -563,7 +700,7 @@ def register(request):
 
 def account(request):
     page_args = {
-        'is_logged_in': ('username' in request.session)
+        'client_is_logged_in': ('username' in request.session)
     }
 
     # set page #
@@ -622,7 +759,7 @@ def account(request):
 
     page_args['account_page_num'] = request.session['account_page_num']  
 
-    if page_args['is_logged_in']:
+    if page_args['client_is_logged_in']:
         
         # Populate username
         page_args['username'] = request.session['username']
@@ -676,9 +813,14 @@ def account(request):
 
 def flagged_transaction(request):
     page_args = {
+        'admin_is_logged_in': ('admin_username' in request.session)
     }
 
-     # set page #
+    # if admin is not logged in exit page
+    if 'admin_username' not in request.session:
+        return render(request, "home.html")
+
+    # set page #
     if 'flagged_transaction_page_num' not in request.session:
         request.session['flagged_transactions_page_num'] = 0 
 
@@ -768,6 +910,9 @@ def flagged_transaction(request):
 def logout(request):
     if 'username' in request.session:
         del request.session['username']
+    if 'admin_username' in request.session:
+        del request.session['admin_username']
+
     #send logs to AWS
     logger.info('Logout')
     send_logs("Fintech-DLP-BigBank", "Logout", 'logout succesful')
@@ -800,7 +945,7 @@ def is_strong_password(password):
 
 # checks the login status and returns a json response depending on the status
 def check_login_status(request):
-    if 'username' in request.session:
+    if 'username' in request.session or 'admin_username' in request.session:
         return JsonResponse({'status': 'logged_in'})
     else:
         return JsonResponse({'status': 'logged_out'})
