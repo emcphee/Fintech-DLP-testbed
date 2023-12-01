@@ -99,15 +99,38 @@
     </div>
 
     {% if selected_flagged_transaction %}
-    add box for the selected transaction info such as transaction amount made. Description of original transaction sender reciever + date. If you make the styling I can then implement the logic.
-
     <div class="selected-transaction-container">
-        <span>Report Transaction Findings</span>
+        <span id="decision-title">Transaction Details</span>
+
+        <div class="details-container" id="date-detail">
+            <label>Date</label>
+            <p>2023-11-28 00:07:51.577173</p>
+        </div>
+        <div class="details-container" id="description-detail">
+            <label>Description</label>
+            <p>cashier's check</p>
+        </div>
+        <div class="details-container" id="sender-detail">
+            <label>Sender</label>
+            <p>ethan</p>
+        </div>
+        <div class="details-container" id="receiver-detail">
+            <label>Receiver</label>
+            <p>ethan</p>
+        </div>
+        <div class="details-container" id="balance-detail">
+            <label>Balance</label>
+            <p>99.0</p>
+        </div>
+
+        <span id="decision-title">Make Report Decision</span>
         <form class="report-form" method="post">
-            {% csrf_token %}
+            <input type="hidden" name="csrfmiddlewaretoken" value="YOa2S6WDYRO6vZSAWoJShhcVuI5hUwQ1Op02TF10JRorNjpG8HoIJRh982pGE0gp">
             <textarea rows="6" cols="25" id="description" name="description" placeholder="Describe the decision of the flagged post..."></textarea>
+            {% csrf_token %}
             <button type="submit" name="form_type" value="cancel-transaction" class="submit-report">Cancel Transaction</button>
-            <button type="submit" name="form_type" value="reject-flag" class="submit-report">Reject Flag</button>
+            {% csrf_token %}
+            <button type="submit" name="form_type" value="reject-flag" class="submit-report">Discard Report</button>
         </form>
     </div>
     {% endif %}
