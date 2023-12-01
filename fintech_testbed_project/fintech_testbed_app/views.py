@@ -132,7 +132,7 @@ def transfer(request):
                 recipient_id = str(result[2])
 
                 if transfer_amount and transfer_amount <= balance:
-                    helper.make_transaction(username, recipient_user, transfer_amount, description)
+                    helper.make_transaction(username, recipient_user, transfer_amount, description, None)
                     helper.update_balance(username, -1 * transfer_amount)
                     helper.update_balance(recipient_user, transfer_amount)
                     result = helper.get_user(request.session['username'])
@@ -203,14 +203,14 @@ def cashier(request):
                     manager_pin = request.POST.get('manager-pin')
                     if manager_pin == HARDCODED_MANAGER_PIN:
                         # make transaction
-                        helper.make_transaction(username, username, deposit, "cashier check")
+                        helper.make_transaction(None, username, deposit, "cashier check", None)
                         # make update balance
                         helper.update_balance(username, deposit)
                     else:
                         error_message = 'Invalid manager pin. Deposit is over $5000'
                 else:
                     # make transaction
-                    helper.make_transaction(username, username, deposit, "cashier check")
+                    helper.make_transaction(None, username, deposit, "cashier check", None)
                     # make update balance
                     helper.update_balance(username, deposit)
             else:
@@ -234,14 +234,14 @@ def cashier(request):
                         manager_pin = request.POST.get('manager-pin')
                         if manager_pin == HARDCODED_MANAGER_PIN:
                             # make transaction
-                            helper.make_transaction(username, username, withdraw, "cashier check")
+                            helper.make_transaction(username, None, withdraw, "cashier check", None)
                             # make update balance
                             helper.update_balance(username, withdraw*-1)
                         else:
                             error_message = 'Invalid manager pin. Withdrawal is over $5000'
                     else:
                         # make transaction
-                        helper.make_transaction(username, username, withdraw, "cashier check")
+                        helper.make_transaction(username, None, withdraw, "cashier check", None)
                         # make update balance
                         helper.update_balance(username, withdraw*-1)
                 else:
@@ -705,7 +705,7 @@ def flagged_transaction(request):
             # NOTE COMMENTED OUT FOR NOW UNCOMMENT FOR EMAIL TO WORK
             try:
                 sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-                    
+
                 # send email if it is enabled
                 if EMAIL_ENABLED:
                     response = sg.send(message)
@@ -713,8 +713,7 @@ def flagged_transaction(request):
                 print("OTP Send Error:", e)
 
             if form_type == 'cancel-transaction':
-                helper.undo_transaction(request.session["selected_flagged_transaction_id"], request.session["selected_flagged_transaction_sender"], request.session["selected_flagged_transaction_reciever"], request.session["selected_flagged_transaction_balance"])
-                helper.delete_flagged_transaction(request.session["selected_flagged_transaction"])
+                helper.undo_transaction(request.session["selected_flagged_transaction"], request.session["selected_flagged_transaction_id"], request.session["selected_flagged_transaction_sender"], request.session["selected_flagged_transaction_reciever"], request.session["selected_flagged_transaction_balance"])
             elif  form_type == 'reject-flag':
                 helper.delete_flagged_transaction(str(request.session["selected_flagged_transaction"]))
                
@@ -735,13 +734,13 @@ def flagged_transaction(request):
             
             # get the transaction info
             result = helper.get_transaction_by_id(str(request.POST['transaction_id']))
-            page_args["transaction_balance"] = result[0]
-            page_args["transaction_date"] = result[1]
-            page_args["transaction_description"] = result[2]
-            page_args["transaction_reciever"] = result[3]
-            page_args["transaction_sender"] = result[4]
+            page_args["transaction_balance"] = result[1]
+            page_args["transaction_date"] = result[2]
+            page_args["transaction_description"] = result[3]
+            page_args["transaction_reciever"] = result[4]
+            page_args["transaction_sender"] = result[5]
 
-            print("here")
+            # add transactions to session variables until discarded
             request.session["selected_flagged_transaction_id"] = page_args["selected_transaction"]
             request.session["selected_flagged_transaction_user"] = request.POST['user']
             request.session["selected_flagged_transaction_sender"] = page_args["transaction_sender"]
