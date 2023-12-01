@@ -90,18 +90,40 @@ def make_transaction(sender, reciever, value):
         db_connection.close()
     
 
-def undo_transaction(sender, reciever, value):
+def undo_transaction(transaction_id, sender, reciever, value):
     db_connection = connections['default']
     cursor = db_connection.cursor()
 
     try:
-        # Begin the transaction
+        # update both users account
         db_connection.autocommit = False
         query = "UPDATE fintech_testbed_app_client SET balance = balance + %s WHERE username = %s"
         sender_params = (value, sender)
         receiver_params = (value * -1, receiver)
         cursor.execute(query, sender_params)
         cursor.execute(query, receiver_params)
+
+        # delete transaction
+        query = "DELETE FROM fintech_testbed_app_transactions WHERE id = %s"
+        deletion_params(transaction_id)
+        cursor.execute(query, deletion_params)
+
+        db_connection.commit()
+    except psycopg2.Error as e:
+        # Rollback the transaction
+        db_connection.rollback()
+    finally:
+        db_connection.close()
+
+def delete_flagged_transaction(transaction_id):
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    try:
+        db_connection.autocommit = False
+        query = "DELETE FROM fintech_testbed_app_flagged_transactions WHERE id = %s"
+        param = (transaction_id)
+        cursor.execute(query, param)
         db_connection.commit()
     except psycopg2.Error as e:
         # Rollback the transaction
