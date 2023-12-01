@@ -72,15 +72,15 @@ def string_to_float(value):
     except ValueError:
         return None
 
-def make_transaction(sender, reciever, value, description):
+def make_transaction(sender, reciever, value, description, admin):
     db_connection = connections['default']
     cursor = db_connection.cursor()
 
     try:
         # Begin the transaction
         db_connection.autocommit = False
-        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description) VALUES (%s, %s, %s, %s, %s, %s)"
-        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')), description)
+        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description, admin) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')), description, admin)
         cursor.execute(new_transactions_query, params)
         db_connection.commit()
     except psycopg2.Error as e:
@@ -90,22 +90,27 @@ def make_transaction(sender, reciever, value, description):
         db_connection.close()
     
 
-def undo_transaction(transaction_id, sender, reciever, value):
+def undo_transaction(flagged_transaction_id, transaction_id, sender, receiver, value):
     db_connection = connections['default']
     cursor = db_connection.cursor()
 
     try:
         # update both users account
         db_connection.autocommit = False
+        query = "DELETE FROM fintech_testbed_app_flagged_transactions WHERE id = %s"
+        param = (str(flagged_transaction_id),)
+        cursor.execute(query, param)
+        
+        
         query = "UPDATE fintech_testbed_app_client SET balance = balance + %s WHERE username = %s"
-        sender_params = (value, sender)
-        receiver_params = (value * -1, receiver)
+        sender_params = (value, sender,)
+        receiver_params = (value * -1, receiver,)
         cursor.execute(query, sender_params)
         cursor.execute(query, receiver_params)
 
         # delete transaction
         query = "DELETE FROM fintech_testbed_app_transactions WHERE id = %s"
-        deletion_params(transaction_id)
+        deletion_params = (transaction_id,)
         cursor.execute(query, deletion_params)
 
         db_connection.commit()
