@@ -717,7 +717,7 @@ def flagged_transaction(request):
                 helper.delete_flagged_transaction(request.session["selected_flagged_transaction"])
             elif  form_type == 'reject-flag':
                 helper.delete_flagged_transaction(request.session["selected_flagged_transaction"])
-                
+               
             # delete session vars
             del request.session["selected_flagged_transaction_id"] 
             del request.session["selected_flagged_transaction_user"]
@@ -741,11 +741,12 @@ def flagged_transaction(request):
             page_args["transaction_reciever"] = result[3]
             page_args["transaction_sender"] = result[4]
 
+            print("here")
             request.session["selected_flagged_transaction_id"] = page_args["selected_transaction"]
             request.session["selected_flagged_transaction_user"] = request.POST['user']
             request.session["selected_flagged_transaction_sender"] = page_args["transaction_sender"]
             request.session["selected_flagged_transaction_reciever"] = page_args["transaction_reciever"]
-            request.session["selected_flagged_transaction_balance"] = page_args["transaction_balance"]
+            request.session["selected_flagged_transaction_balance"] = helper.string_to_float(str(page_args["transaction_balance"]))
             request.session["selected_flagged_transaction"] = request.POST['flagged_transaction_id']
 
     page_args['flagged_transactions_page_num'] = request.session['flagged_transactions_page_num'] 
