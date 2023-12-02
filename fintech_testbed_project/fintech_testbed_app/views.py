@@ -116,15 +116,19 @@ BYPASS_2FA_DEBUG = True
 EMAIL_ENABLED = False
 HARDCODED_MANAGER_PIN = '0423'
 
+# transfer page that makes transfers between accounts
 def transfer(request):
+    # arguments being sent to html
     page_args = {
+        'admin_is_logged_in': ('admin_username' in request.session),
         'client_is_logged_in': ('username' in request.session)
     }
 
+    # force redirect if permission is denied
     if not page_args['client_is_logged_in']:
-        return render(request, "home.html")
+        return redirect('/')
     
-    # get the user
+    # get the user through helper user function
     result = helper.get_user(request.session['username'])
     username = result[0]
     balance = result[1]
@@ -136,25 +140,29 @@ def transfer(request):
         # check where the button was pressed
         form_type = request.POST.get('form_type', '')
 
-        if form_type == 'transfer-user':    
+        # check form submission type
+        if form_type == 'transfer-user':        
+            # get page inputs
             recipient = request.POST['recipient']
             transfer_amount = helper.string_to_float(request.POST['transfer-amount'])
             description = request.POST['description']
             
-            # get recipient
+            # get recipient through helper function
             recipient = helper.get_user(recipient)
 
             # check if recipient exists
             if recipient:
+                # get info fneeded for transfer
                 recipient_user = recipient[0]
                 recipient_id = str(result[2])
 
+                # make transfer between accounts
                 if transfer_amount and transfer_amount <= balance:
-                    helper.make_transaction(username, recipient_user, transfer_amount, description, None)
-                    helper.update_balance(username, -1 * transfer_amount)
-                    helper.update_balance(recipient_user, transfer_amount)
+                    # make transaction and update both user balances and show updated balance to page
+                    helper.account_transfer(username, recipient_user, transfer_amount, description, None)
                     result = helper.get_user(request.session['username'])
                     page_args["balance"] = result[1]
+                    
                     #send logs to AWS
                     logger.info('Transfer Succesful')
                     send_logs("Fintech-DLP-BigBank", "Transfer", 'Transfer Succesful')
@@ -171,6 +179,7 @@ def transfer(request):
     
     return render(request, "transfer.html", page_args)
 
+# admin page to handout money to clien accounts
 def cashier(request):
     local_variables = locals()
 
@@ -182,28 +191,31 @@ def cashier(request):
 
     # if admin is not logged in exit page
     if 'admin_username' not in request.session:
-        return render(request, "home.html")
+        return redirect('/')
 
     # check if a button is clicked
     if request.method == 'POST':
         # check where the button was pressed
         form_type = request.POST.get('form_type', '')
-        if form_type == 'checkout-user':    # select user
+        if form_type == 'checkout-user':            # select user
             username = request.POST['username']
 
             # get the user
             result = helper.get_user(username)
 
+            # check if there is a user
             if result:
+                # get values and update form
                 username = result[0]
                 balance = result[1]
                 user_id = str(result[2])
 
+                # set session
                 request.session['cashier_username'] = username
                 request.session['cashier_balance'] = balance
                 request.session['cashier_id'] = user_id
             else:
-
+                # remove session variables and notify error
                 if "cashier_username" in request.session:
                     del request.session['cashier_username']
                     del request.session['cashier_balance']
@@ -212,37 +224,42 @@ def cashier(request):
                     error_message = "User not found."
                     page_args['error_message'] = error_message
 
-        elif form_type == 'make-deposit':   # make deposit
+        elif form_type == 'make-deposit':           # make deposit
+            # check the form info
             deposit = request.POST['deposit-amount']
             deposit = helper.string_to_float(deposit)
             
+            # if there is a valid deposit input
             if deposit:
+                # get session variables
                 username = request.session.get('cashier_username')
                 balance = helper.string_to_float(request.session['cashier_balance'])
                 user_id = request.session.get('cashier_id')
 
+                # check if deposit needs to be checked by manager pin
                 if deposit >= 5000:
                     manager_pin = request.POST.get('manager-pin')
                     if manager_pin == HARDCODED_MANAGER_PIN:
                         # make transaction
-                        helper.make_transaction(None, username, deposit, "cashier check", None)
+                        helper.make_transaction(None, username, deposit, "cashier check", request.session['admin_username'])
                         # make update balance
                         helper.update_balance(username, deposit)
                     else:
                         error_message = 'Invalid manager pin. Deposit is over $5000'
                 else:
                     # make transaction
-                    helper.make_transaction(None, username, deposit, "cashier check", None)
+                    helper.make_transaction(None, username, deposit, "cashier check", request.session['admin_username'])
                     # make update balance
                     helper.update_balance(username, deposit)
             else:
                 error_message = 'Invalid deposit amount.'
                 
         elif form_type == 'make-withdrawal':    # make withdrawal
+            # check form info
             withdraw = request.POST['withdraw-amount']
             withdraw = helper.string_to_float(withdraw)
 
-
+            # if there is a valid withdraw
             if withdraw:
                 username = request.session.get('cashier_username')
                 balance = helper.string_to_float(request.session.get('cashier_balance'))
@@ -256,14 +273,14 @@ def cashier(request):
                         manager_pin = request.POST.get('manager-pin')
                         if manager_pin == HARDCODED_MANAGER_PIN:
                             # make transaction
-                            helper.make_transaction(username, None, withdraw, "cashier check", None)
+                            helper.make_transaction(username, None, withdraw, "cashier check", request.session['admin_username'])
                             # make update balance
                             helper.update_balance(username, withdraw*-1)
                         else:
                             error_message = 'Invalid manager pin. Withdrawal is over $5000'
                     else:
                         # make transaction
-                        helper.make_transaction(username, None, withdraw, "cashier check", None)
+                        helper.make_transaction(username, None, withdraw, "cashier check", request.session['admin_username'])
                         # make update balance
                         helper.update_balance(username, withdraw*-1)
                 else:
@@ -284,6 +301,7 @@ def cashier(request):
 
             page_args = {
                 'admin_is_logged_in': ('admin_username' in request.session),
+                'client_is_logged_in': ('username' in request.session),
                 "username": username,
                 "balance": balance,
                 "error_message": error_message
@@ -295,18 +313,26 @@ def cashier(request):
 
     return render(request, "cashiers-interface.html", page_args)
 
+# home page the main view when first logged in or on the website
 def home(request):
     page_args = {
         'client_is_logged_in': ('username' in request.session),
         'admin_is_logged_in': ('admin_username' in request.session)
     }
+    
+    # sets page based on what account is logged in if any
     if page_args['client_is_logged_in']:
         page_args['username'] = request.session['username']
+    elif page_args['admin_is_logged_in']:
+        page_args['admin_username'] = request.session['admin_username']
 
+    # if the user inputs a login form on home
     if request.method == 'POST':
         form_type = request.POST.get('form_type', '')
-        print(form_type)
+        
+        # check submitted for
         if form_type == 'homepage-enter-credentials':
+            # set new url and sets session variables for that page
             login_url = reverse('login')
             username = request.POST['username']
             password = request.POST['password']
@@ -320,11 +346,13 @@ def home(request):
     send_logs("Fintech-DLP-BigBank", "home page", 'Home page visited')
     return render(request, "home.html", page_args)
 
+# the login page for clients
 def login(request):
     # initialize the checks
     error_message = None
     valid_credentials = None
     
+    # check user credentials to see if they are eligable to log in
     def check_credentials(request, username, password):
         valid_credentials = False
         error_message = None
@@ -332,13 +360,17 @@ def login(request):
         # query to check if it exists in the db        
         result = helper.get_user(username)
 
+        # if username exists
         if result:
+            # get encrypted password details
             salt = result[4]
             hashed_password = result[5]
             email = result[3]
-                    
+            
+            # descrypt password based on input
             hashed_entered_password = bcrypt.hashpw(password.encode('utf-8'), salt.encode('utf-8'))
 
+            # check if password correct
             if hashed_entered_password == hashed_password.encode('utf-8'):
                 # update credentials
                 valid_credentials = True
@@ -390,14 +422,18 @@ def login(request):
                     "error_message": error_message
                 }
     
-
+    # if the user logged in on the homepage
     if 'login_query_processed' in request.session:
+        # check if both inputs where made and check if the login isn't repeating
         if (
             'home_username_input' in request.session and 
             'home_password_input' in request.session and 
             not request.session.get('login_query_processed')
         ):
+            # check credentials of the user
             result = check_credentials(request, request.session['home_username_input'], request.session['home_password_input'])
+            
+            # get result info and update page arguments to determine if the next step can be made
             error_message = result['error_message']
             valid_credentials = result['valid_credentials']
             page_args = {
@@ -406,6 +442,8 @@ def login(request):
                 'valid_credentials' : valid_credentials,
                 'username_sendback' : request.session['home_username_input']
             }
+
+            # delete repeated variables
             del request.session['home_username_input']
             del request.session['home_password_input']
             request.session['login_query_processed'] = True
@@ -425,6 +463,7 @@ def login(request):
             error_message = result['error_message']
             valid_credentials = result['valid_credentials']
             page_args = {
+                'admin_is_logged_in': ('admin_username' in request.session),
                 'client_is_logged_in': ('username' in request.session),
                 'error_message' : error_message,
                 'valid_credentials' : valid_credentials,
@@ -464,6 +503,7 @@ def login(request):
             valid_credentials = True
 
     page_args = {
+        'admin_is_logged_in': ('admin_username' in request.session),
         'client_is_logged_in': ('username' in request.session),
         'error_message' : error_message,
         'valid_credentials' : valid_credentials,
@@ -473,32 +513,43 @@ def login(request):
     # stay on page
     return render(request, "login.html", page_args)
 
+# the login page for admins
 def admin_login(request):
 
+    # get all admins to see if any exist
     results = helper.admin_all_select()
 
-    # set default admin
+    # set default admin if no admins are there
     if results == None:
         helper.admin_register("BigBank", "bigbankwebservice@gmail.com", "BankMainAdmin1!")
+        helper.admin_register("Subu", "b.kandaswamy@wsu.edu", "BankMainAdmin1!")
+        helper.admin_register("Ethan", "ethan.mcphee@wsu.edu", "BankMainAdmin1!")
+        helper.admin_register("Jean", "jean.cho@wsu.edu", "BankMainAdmin1!")
+        helper.admin_register("Sam", "samuel.zhang@wsu.edu", "BankMainAdmin1!")
+        helper.admin_register("Derek", "sadler_derek@comcast.net", "BankMainAdmin1!")
 
     # initialize the checks
     error_message = None
     valid_credentials = None
     
+    # check user credentials
     def check_credentials(request, username, password):
+        # vars to return to page
         valid_credentials = False
         error_message = None
 
         # query to check if it exists in the db        
         result = helper.get_admin_user(username)
 
+        # if user exists
         if result:
+            # set result variables
             salt = result[4]
             hashed_password = result[3]
             email = result[2]
-                    
+            
+            # get hashed password and check if it is correct        
             hashed_entered_password = bcrypt.hashpw(password.encode('utf-8'), salt.encode('utf-8'))
-
             if hashed_entered_password == hashed_password.encode('utf-8'):
                 # update credentials
                 valid_credentials = True
@@ -565,6 +616,7 @@ def admin_login(request):
             error_message = result['error_message']
             valid_credentials = result['valid_credentials']
             page_args = {
+                'admin_is_logged_in': ('admin_username' in request.session),
                 'client_is_logged_in': ('username' in request.session),
                 'error_message' : error_message,
                 'valid_credentials' : valid_credentials,
@@ -602,6 +654,7 @@ def admin_login(request):
 
     page_args = {
         'admin_is_logged_in': ('admin_username' in request.session),
+        'client_is_logged_in': ('username' in request.session),
         'error_message' : error_message,
         'valid_credentials' : valid_credentials,
         'username_sendback' : ''
@@ -610,6 +663,7 @@ def admin_login(request):
     # stay on page
     return render(request, "admin-login.html", page_args)
 
+# page that shows website services
 def services(request):
     page_args = {
         'client_is_logged_in': ('username' in request.session),
@@ -617,6 +671,7 @@ def services(request):
     }
     return render(request, "services.html", page_args)
 
+# page that shows bigbank info
 def aboutus(request):
     page_args = {
         'client_is_logged_in': ('username' in request.session),
@@ -624,13 +679,43 @@ def aboutus(request):
     }
     return render(request, "aboutus.html", page_args)
 
+# page to contact bigbank
 def contactus(request):
     page_args = {
         'client_is_logged_in': ('username' in request.session),
         'admin_is_logged_in': ('admin_username' in request.session)
     }
+
+    # if the form is submitted to contact the bank
+    if request.method == 'POST':
+        # get input details
+        name = request.POST['name']
+        email = request.POST['email']
+        message = request.POST['message']
+        header = name + " at " + email
+
+        # set the message to be sent
+        message = Mail(
+            from_email='bigbankwebservice@gmail.com',
+            to_emails= 'bigbankwebservice@gmail.com',
+            subject= header,
+            plain_text_content=message
+        )
+
+        # attempt to send email
+        # NOTE COMMENTED OUT FOR NOW UNCOMMENT FOR EMAIL TO WORK
+        try:
+            sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+                    
+            # send email if it is enabled
+            if EMAIL_ENABLED:
+                response = sg.send(message)
+        except Exception as e:
+             print("OTP Send Error:", e)
+
     return render(request, "contactus.html", page_args)
 
+# registration page
 def register(request):
     error_message = None  # Initialize values to None or empty string
     username = ''
@@ -638,7 +723,9 @@ def register(request):
     lastname = ''
     email = ''
     
+    # if a form is posted
     if request.method == 'POST':
+        # get inputs
         username = request.POST['username']
         firstname = request.POST['first-name']
         lastname = request.POST['last-name']
@@ -698,8 +785,10 @@ def register(request):
     send_logs("Fintech-DLP-BigBank", "Register", 'Registration Failed')
     return render(request, "register.html", page_args)
 
+# main user account page
 def account(request):
     page_args = {
+        'admin_is_logged_in': ('admin_username' in request.session),
         'client_is_logged_in': ('username' in request.session)
     }
 
@@ -759,6 +848,7 @@ def account(request):
 
     page_args['account_page_num'] = request.session['account_page_num']  
 
+    # check if the user is logged in and print the user info
     if page_args['client_is_logged_in']:
         
         # Populate username
@@ -781,7 +871,7 @@ def account(request):
 
         # get transactions from user account
         sql_query = """
-            SELECT t.datetime, t.description, t.sender, t.reciever, t.balance, t.id
+            SELECT t.datetime, t.description, t.sender, t.reciever, t.balance, t.id, t.admin_cashier
             FROM fintech_testbed_app_transactions AS t
             JOIN fintech_testbed_app_client AS u ON t.sender = u.username OR t.reciever = u.username
             WHERE u.username = %s
@@ -806,14 +896,16 @@ def account(request):
         
         return render(request, "account.html", page_args)
     else:
-        #send logs to AWS
+        #send logs to AWS and redirect user home
         logger.info('Account')
         send_logs("Fintech-DLP-BigBank", "Account", 'Attempt to visit account page has failed')
-        return render(request, "home.html")
+        return redirect('/')
 
+# admin page to review flagged transactions
 def flagged_transaction(request):
     page_args = {
-        'admin_is_logged_in': ('admin_username' in request.session)
+        'admin_is_logged_in': ('admin_username' in request.session),
+        'client_is_logged_in': ('username' in request.session)
     }
 
     # if admin is not logged in exit page
@@ -833,16 +925,18 @@ def flagged_transaction(request):
             request.session['account_page_num'] += 1
         elif form_type == 'last-page':
             request.session['account_page_num'] -= 1
-        elif form_type == 'cancel-transaction' or  form_type == 'reject-flag':
+        elif form_type == 'cancel-transaction' or  form_type == 'reject-flag':      # admin has made decision on a selected transaction
+            # get needed details
             description = request.POST["description"]
             flagged_transaction_id = request.session["selected_flagged_transaction"]
             flagged_transaction_user = request.session["selected_flagged_transaction_user"]
             
+            # get the user of the flagged transaction
             result = helper.get_user(flagged_transaction_user)
             email = result[3]
             
             # set the message to be sent
-            essage = Mail(
+            message = Mail(
                 from_email='bigbankwebservice@gmail.com',
                 to_emails= email,
                 subject='BigBank Flagged Transaction Findings',
@@ -860,9 +954,10 @@ def flagged_transaction(request):
             except Exception as e:
                 print("OTP Send Error:", e)
 
-            if form_type == 'cancel-transaction':
+            # perform a different action based on admin choice
+            if form_type == 'cancel-transaction':   # undo transaction
                 helper.undo_transaction(request.session["selected_flagged_transaction"], request.session["selected_flagged_transaction_id"], request.session["selected_flagged_transaction_sender"], request.session["selected_flagged_transaction_reciever"], request.session["selected_flagged_transaction_balance"])
-            elif  form_type == 'reject-flag':
+            elif  form_type == 'reject-flag':       # reject the flag
                 helper.delete_flagged_transaction(str(request.session["selected_flagged_transaction"]))
                
             # delete session vars
@@ -887,6 +982,7 @@ def flagged_transaction(request):
             page_args["transaction_description"] = result[3]
             page_args["transaction_reciever"] = result[4]
             page_args["transaction_sender"] = result[5]
+            page_args["transaction_admin_cashier"] = result[6]
 
             # add transactions to session variables until discarded
             request.session["selected_flagged_transaction_id"] = page_args["selected_transaction"]
@@ -907,7 +1003,9 @@ def flagged_transaction(request):
 
     return render(request, "flagged-transaction-interface.html", page_args) 
 
+# logout of all accounts and redirect back to login screen
 def logout(request):
+    # delete session variables
     if 'username' in request.session:
         del request.session['username']
     if 'admin_username' in request.session:
@@ -918,6 +1016,7 @@ def logout(request):
     send_logs("Fintech-DLP-BigBank", "Logout", 'logout succesful')
     return login(request)
 
+# helper for password strength
 def is_strong_password(password):
     # Check if the password is at least 8 characters long
     if len(password) < 8:
