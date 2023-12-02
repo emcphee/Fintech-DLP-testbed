@@ -29,8 +29,19 @@
                     {% csrf_token %}
                     <span class="date">{{ transaction.0 }}</span>
                     <span class="description">{{ transaction.1 }}</span>
-                    <span class="sender">{{ transaction.2 }}</span>
-                    <span class="receiver">{{ transaction.3 }}</span>
+
+                    {% if transaction.2 is None %}
+                        <span class="sender">Admin: {{ transaction.6 }}</span>
+                    {% else %}
+                        <span class="sender">{{ transaction.2 }}</span>
+                    {% endif %}
+
+                    {% if transaction.3 is None %}
+                        <span class="receiver">Admin: {{ transaction.6 }}</span>
+                    {% else %}
+                        <span class="receiver">{{ transaction.3 }}</span>
+                    {% endif %}
+
                     <span class="balance">{{ transaction.4 }}</span>
                     <input type="hidden" name="date" value="{{ transaction.0 }}">
                     <input type="hidden" name="description" value="{{ transaction.1 }}">
