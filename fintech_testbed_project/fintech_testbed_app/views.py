@@ -527,6 +527,7 @@ def admin_login(request):
         helper.admin_register("Jean", "jean.cho@wsu.edu", "BankMainAdmin1!")
         helper.admin_register("Sam", "samuel.zhang@wsu.edu", "BankMainAdmin1!")
         helper.admin_register("Derek", "sadler_derek@comcast.net", "BankMainAdmin1!")
+        helper.admin_register("Jason", "jasonburt@google.com", "BankMainAdmin1!")
 
     # initialize the checks
     error_message = None
