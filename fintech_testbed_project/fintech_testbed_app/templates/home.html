@@ -35,7 +35,12 @@
             {% elif client_is_logged_in %}
                 <h1>Welcome back {{username}}!</h1>
                 <a href="/account" class="register-button">View Account</a>
+            {% elif admin_is_logged_in %}
+                <h1>Welcome back {{admin_username}}!</h1>
+                <a href="/cashier" class="register-button">Cashier</a>
+                <a href="/flagged-transactions" class="register-button">Flagged Transactions</a>
             {% endif %}
+            
         </div>
     </div>
 
