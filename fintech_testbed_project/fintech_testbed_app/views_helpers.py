@@ -16,6 +16,7 @@ from urllib.parse import urlencode
 from django.urls import reverse
 from datetime import datetime
 
+
 def get_user(username):
     # get the user
     db_connection = connections['default']
@@ -69,7 +70,7 @@ def get_transaction_by_id(transaction_id):
     cursor = db_connection.cursor()
 
     # get the transactions
-    sql_query = "SELECT id, balance, datetime, description, reciever, sender FROM fintech_testbed_app_transactions WHERE id = %s"
+    sql_query = "SELECT id, balance, datetime, description, reciever, sender, admin_cashier FROM fintech_testbed_app_transactions WHERE id = %s"
     params = (transaction_id,)
     cursor.execute(sql_query, params)
     result = cursor.fetchall()
@@ -205,3 +206,30 @@ def admin_all_select():
         return result
     else:
         return None
+
+
+def account_transfer(sender, reciever, value, description, admin):
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    try:
+        # Begin the transaction
+        db_connection.autocommit = False
+        new_transactions_query = "INSERT INTO fintech_testbed_app_transactions (id, sender, reciever, balance, datetime, description, admin_cashier) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        params = (uuid.uuid4(), sender, reciever, value, str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')), description, admin)
+        cursor.execute(new_transactions_query, params)
+
+        # begin the account updates
+        query = "UPDATE fintech_testbed_app_client SET balance = balance + %s WHERE username = %s"
+
+        # Execute the update query
+        cursor.execute(query, (value, reciever))
+        cursor.execute(query, (-1 * value, sender))
+
+        # commit the transaction
+        db_connection.commit()
+    except psycopg2.Error as e:
+        # Rollback the transaction
+        db_connection.rollback()
+    finally:
+        db_connection.close()
