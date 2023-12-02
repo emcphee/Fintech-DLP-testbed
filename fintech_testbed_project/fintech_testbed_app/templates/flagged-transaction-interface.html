@@ -35,6 +35,7 @@
                     <input type="hidden" name="description" value="{{ transaction.2 }}">
                     <input type="hidden" name="user" value="{{ transaction.3 }}">
                     <input type="hidden" name="transaction_id" value="{{ transaction.4 }}">
+                    <input type="hidden" name="admin_cashier" value="{{ transaction.4 }}">
             </form>
             {% endfor %}
 
@@ -112,11 +113,20 @@
         </div>
         <div class="details-container" id="sender-detail">
             <label>Sender</label>
-            <p>{{ transaction_sender }}</p>
+            {% if transaction_sender is None %}
+                <p>Admin {{ transaction_admin_cashier }}</p>
+            {% else %}
+                <p>{{ transaction_sender }}</p>
+            {% endif %}
+
         </div>
         <div class="details-container" id="receiver-detail">
             <label>Receiver</label>
-            <p>{{ transaction_reciever }}</p>
+            {% if transaction_reciever is None %}
+                <p>Admin {{ transaction_admin_cashier }}</p>
+            {% else %}
+                <p>{{ transaction_reciever }}</p>
+            {% endif %}
         </div>
         <div class="details-container" id="balance-detail">
             <label>Balance</label>
