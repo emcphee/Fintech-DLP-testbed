@@ -233,3 +233,45 @@ def account_transfer(sender, reciever, value, description, admin):
         db_connection.rollback()
     finally:
         db_connection.close()
+
+def make_flagged_transaction(id, description, transaction_id, client_username, datetime):
+    
+    
+    db_connection = connections['default']
+    cursor = db_connection.cursor()
+
+    try:
+        # Begin the transaction
+        db_connection.autocommit = False
+        
+        # prevent repeated flagged transactions
+        sql_query = "SELECT id FROM fintech_testbed_app_flagged_transactions WHERE transactions_id = %s"
+        params = (transaction_id,)
+        cursor.execute(sql_query, params)
+        result = cursor.fetchall()
+
+        if len(result) != 0:
+            print("Err")
+            return
+        
+        
+        # get the transaction
+        sql_query = "SELECT id FROM fintech_testbed_app_transactions WHERE id = %s"
+        params = (transaction_id,)
+        cursor.execute(sql_query, params)
+        result = cursor.fetchall()
+                
+        # add to transaction table
+        result = result[0]
+        transaction_id = result[0]
+        new_transactions_query = "INSERT INTO fintech_testbed_app_flagged_transactions (id, description, transactions_id, client_username, datetime) VALUES (%s, %s, %s, %s, %s)"
+        params = (id, description, transaction_id, client_username, datetime)
+        cursor.execute(new_transactions_query, params)
+                
+        # class connection
+        db_connection.commit()
+    except psycopg2.Error as e:
+        # Rollback the transaction
+        db_connection.rollback()
+    finally:
+        db_connection.close()
