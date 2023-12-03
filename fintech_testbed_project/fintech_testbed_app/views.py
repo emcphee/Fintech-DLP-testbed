@@ -96,8 +96,8 @@ def send_logs(log_group, log_stream, log_data):
 
 
 ################################################
-BYPASS_2FA_DEBUG = True
-EMAIL_ENABLED = False
+BYPASS_2FA_DEBUG = False
+EMAIL_ENABLED = True
 HARDCODED_MANAGER_PIN = '0423'
 
 # transfer page that makes transfers between accounts
