@@ -31,22 +31,6 @@ logger = logging.getLogger(__name__)
 
 import requests
 
-def ip_to_city(ip):
-    url = 'http://ip-api.com/json/' + ip
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            json_response = response.json()
-            return json_response['city']
-        else:
-            return None
-
-    except requests.exceptions.RequestException as e:
-        return None
-
-ip = '69.166.44.39'
-print(ip_to_city(ip))
-
 # Function to send logs to AWS CloudWatch Logs
 def send_logs(log_group, log_stream, log_data):
     try:
@@ -157,7 +141,7 @@ def transfer(request):
                 recipient_id = str(result[2])
 
                 # make transfer between accounts
-                if transfer_amount and transfer_amount <= balance:
+                if transfer_amount and transfer_amount <= balance and transfer_amount > 0:
                     # make transaction and update both user balances and show updated balance to page
                     helper.account_transfer(username, recipient_user, transfer_amount, description, None)
                     result = helper.get_user(request.session['username'])
@@ -492,7 +476,7 @@ def login(request):
                 # send logs to AWS
                 logger.info('Login')
                 send_logs("Fintech-DLP-BigBank", "Login", 'Login Succesful')
-                return home(request) 
+                return redirect('/')
             else:
                 error_message = "Wrong code"
                 #send logs to AWS
@@ -516,6 +500,31 @@ def login(request):
 # the login page for admins
 def admin_login(request):
 
+    def get_ip_info():
+        try:
+            response = requests.get('https://ipinfo.io/json')
+            if response.status_code == 200:
+                json_response = response.json()
+                return json_response.get('city')
+            else:
+                return None
+        except requests.RequestException as e:
+            print(f"Request Exception: {e}")
+            return None
+
+
+    if get_ip_info() != 'Pullman':
+        page_args = {
+            'admin_is_logged_in': ('admin_username' in request.session),
+            'client_is_logged_in': ('username' in request.session),
+            'error_message' : "Not in Pullman",
+            'valid_credentials' : False,
+            'username_sendback' : ''
+        }
+
+        # stay on page
+        return render(request, "admin-login.html", page_args)
+    
     # get all admins to see if any exist
     results = helper.admin_all_select()
 
@@ -643,7 +652,7 @@ def admin_login(request):
                 # send logs to AWS
                 #logger.info('Login')
                 #send_logs("Fintech-DLP-BigBank", "Login", 'Login Succesful')
-                return home(request) 
+                return redirect('/')
             else:
                 error_message = "Wrong code"
                 #send logs to AWS
@@ -767,7 +776,7 @@ def register(request):
                 logger.info('Register')
                 send_logs("Fintech-DLP-BigBank", "Register", 'Registration Succesful')
                 # Redirect to a success page or home page
-                return home(request)
+                return redirect('/')
             else:
                 # Passwords don't match, set error message
                 error_message = "Confirmed password must match the password."
@@ -813,30 +822,9 @@ def account(request):
 
             db_connection = connections['default']
             cursor = db_connection.cursor()
+            
 
-            try:
-                # Begin the transaction
-                db_connection.autocommit = False
-                # get the transaction
-                sql_query = "SELECT id FROM fintech_testbed_app_transactions WHERE id = %s"
-                params = (transaction_id,)
-                cursor.execute(sql_query, params)
-                result = cursor.fetchall()
-                
-                # add to transaction table
-                result = result[0]
-                transaction_id = result[0]
-                new_transactions_query = "INSERT INTO fintech_testbed_app_flagged_transactions (id, description, transactions_id, client_username, datetime) VALUES (%s, %s, %s, %s, %s)"
-                params = (uuid.uuid4(), description, transaction_id, str(request.session['username']), str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-                cursor.execute(new_transactions_query, params)
-                
-                # class connection
-                db_connection.commit()
-            except psycopg2.Error as e:
-                # Rollback the transaction
-                db_connection.rollback()
-            finally:
-                db_connection.close()
+            helper.make_flagged_transaction(uuid.uuid4(), description, transaction_id, str(request.session['username']), str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
             del request.session["selected_transaction"]
         else:                                               # transaction clicked
@@ -1015,7 +1003,7 @@ def logout(request):
     #send logs to AWS
     logger.info('Logout')
     send_logs("Fintech-DLP-BigBank", "Logout", 'logout succesful')
-    return login(request)
+    return redirect('/login')
 
 # helper for password strength
 def is_strong_password(password):
