@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-icd)x0=^=t=y1b-bcm_raze*u*mbxeeh-y_w#8ur9gz552=y#l'
+SECRET_KEY = 'REMOVED FOR GIT'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -79,7 +79,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'db', 
         'USER': 'postgres',
-        'PASSWORD': '0327',
+        'PASSWORD': 'REMOVED FOR GIT',
         'HOST': '127.0.0.1', 
         'PORT': '5432',
     }
@@ -128,6 +128,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
-SENDGRID_API_KEY = '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'
+SENDGRID_API_KEY = 'REMOVED FOR GIT'
 
 CSRF_TRUSTED_ORIGINS = ['https://big-bank.me']

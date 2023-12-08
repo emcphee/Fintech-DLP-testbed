@@ -35,8 +35,8 @@ import requests
 def send_logs(log_group, log_stream, log_data):
     try:
         # Configure your AWS credentials and region
-        aws_access_key_id = 'your aws key' #'your aws key'
-        aws_secret_access_key = 'your aws secerete'#'your aws secerete'
+        aws_access_key_id = 'REMOVED FOR GIT'
+        aws_secret_access_key = 'REMOVED FOR GIT'
         aws_region = 'us-west-2'
 
         client = boto3.client('logs', region_name=aws_region, aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
@@ -96,7 +96,7 @@ def send_logs(log_group, log_stream, log_data):
 
 
 ################################################
-BYPASS_2FA_DEBUG = False
+BYPASS_2FA_DEBUG = True
 EMAIL_ENABLED = True
 HARDCODED_MANAGER_PIN = '0423'
 
@@ -502,9 +502,15 @@ def admin_login(request):
 
     def get_ip_info():
         try:
-            response = requests.get('https://ipinfo.io/json')
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[0]
+            else:
+                ip = request.META.get('REMOTE_ADDR')
+            response = requests.get(f'https://ipinfo.io/{ip}/json')
             if response.status_code == 200:
                 json_response = response.json()
+                print(json_response.get('city'))
                 return json_response.get('city')
             else:
                 return None
@@ -827,6 +833,7 @@ def account(request):
             helper.make_flagged_transaction(uuid.uuid4(), description, transaction_id, str(request.session['username']), str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
             del request.session["selected_transaction"]
+            return redirect(reverse('account'))
         else:                                               # transaction clicked
             page_args["selected_transaction"] = request.POST['transaction_id']
             page_args["transaction_date"] = request.POST["date"]
@@ -956,6 +963,7 @@ def flagged_transaction(request):
             del request.session["selected_flagged_transaction_reciever"]
             del request.session["selected_flagged_transaction_balance"]
             del request.session["selected_flagged_transaction"]
+            return redirect(reverse('flagged-transfer'))
 
         else:
             page_args["selected_flagged_transaction"] = request.POST['flagged_transaction_id']
