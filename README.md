@@ -8,3 +8,7 @@
 - Step 3: Run: Python fintech_testbed_project/manage.py makemigrations, and then Python fintech_testbed_project/manage.py migrate
 - Step 4: Run: Python fintech_testbed_project/manage.py runserver
 - Step 4: Connect to localhost:8000 through a web browser
+
+## Notes:
+- DB dump not included, as the site can be run with full functionality without a filled DB
+- DB Schema is listed in the Django models.py file
